@@ -9,7 +9,7 @@ The business objective is to help users decide *when* and *where* to pick up a b
 *   **Target variable:** `num_bikes_available` – the number of bikes that can be rented from a station at a specific point in time.
 *   **Inputs:** A vector of temporal, spatial, and meteorological features that are known in advance or can be observed at prediction time.
 
-Predictions are produced in bulk for every forecast hour stored in the `weather_forecast` table, and the results are exposed to the frontend via the `/api/stations/<station_id>/prediction` endpoint.
+Predictions are produced in bulk for every forecast entry stored in the `weather_forecast` table, and the results are exposed to the frontend via the `/api/stations/<station_id>/prediction` endpoint.
 
 ## 2. Dataset and Data-Cleaning Process
 
@@ -98,23 +98,25 @@ Table 1 summarises the out-of-sample performance of each candidate.
 | **Random Forest** | **2.325** | **3.393** | **0.879** |
 | Gradient Boosting | 6.120 | 7.537 | 0.401 |
 
-*Table 1: Regression-model comparison on the 30 % hold-out test set.*
+*Table 1: Regression-model comparison on the 30 % hold-out test set. The values are taken directly from the executed notebook cells; the final markdown summary cell in `ml.ipynb` accidentally lists a different (erroneous) set of Random Forest metrics, which should be disregarded.*
 
 Linear Regression performs poorly (R² ≈ 0.08), confirming that bike availability has strong non-linear relationships with time and location that a linear model cannot capture. Gradient Boosting also under-performs in this first comparison, likely because its default shallow-tree configuration is insufficient for the complex spatial and temporal interactions present in the data.
 
-The Decision Tree achieves the lowest MAE (0.970) and the highest R² (0.941). However, a single deep decision tree is prone to over-fitting; its superior numbers on this particular split may reflect memorisation rather than generalisation. The Random Forest, while slightly worse on this single test split, offers a more conservative and stable ensemble prediction. Because the ultimate goal is a production service that must generalise to unseen future days and weather conditions, the **Random Forest Regressor was selected as the final model**.
+The Decision Tree achieves the lowest MAE (0.970) and the highest R² (0.941) on this single hold-out split. However, a single deep decision tree is prone to over-fitting; its superior numbers here may reflect memorisation rather than generalisation. The Random Forest, while worse on this particular test split, offers a more conservative and stable ensemble prediction. Because the ultimate goal is a production service that must generalise to unseen future days and weather conditions, the **Random Forest Regressor was selected as the final model** and exported for the Flask backend.
 
 ### 4.2 Feature Importance
 
-Using the Random Forest’s built-in `feature_importances_` attribute, the most influential predictors were identified. The ranking (from highest to lowest importance) is:
+Using the Random Forest’s built-in `feature_importances_` attribute, the most influential predictors were identified. The exact ranking observed in the training run (from highest to lowest importance) is:
 
 1.  `lat` / `lon` – geographic position dominates because different neighbourhoods have fundamentally different demand profiles.
-2.  `hour` / `day` / `day_of_week` – temporal patterns strongly reflect commuting and leisure usage cycles.
-3.  `avg_pressure` / `avg_temperature` – weather conditions affect people’s willingness to cycle.
-4.  `station_id` / `capacity` – station identity and size provide useful baseline capacity information.
-5.  `avg_humidity` / `is_weekend` – moderate but non-negligible contribution.
+2.  `day` / `hour` – the specific calendar day and hour of day capture strong commuting and usage cycles.
+3.  `station_id` – the station identifier provides additional location-specific baseline information beyond pure coordinates.
+4.  `avg_pressure` – barometric pressure emerges as the most influential weather signal in this dataset.
+5.  `capacity` – the total number of stands sets an upper bound and influences baseline availability.
+6.  `day_of_week` / `avg_temperature` – weekday effects and temperature contribute moderate predictive power.
+7.  `avg_humidity` / `is_weekend` – humidity and the weekend flag show smaller but non-negligible contributions.
 
-This ranking aligns well with domain intuition: location and time of day are the primary drivers of bike-share demand, while weather acts as a secondary modifier.
+This ranking aligns well with domain intuition: location and time are the primary drivers of bike-share demand, while weather acts as a secondary modifier.
 
 ### 4.3 Production Integration
 
@@ -126,11 +128,11 @@ The trained Random Forest and the ordered feature list were serialised with `pic
 At application start-up, `app/__init__.py` pre-loads these artefacts into global memory via `_load_model()` in `app/services/prediction_service.py`. When a user requests predictions for a specific station, the service:
 
 1.  Retrieves the station’s static metadata (`capacity`, `lat`, `lon`) from the `station` table.
-2.  Fetches the upcoming hourly weather forecasts from the `weather_forecast` table (populated continuously by the scraper).
+2.  Fetches the upcoming weather forecasts from the `weather_forecast` table (populated continuously by the scraper). Depending on the API tier available at runtime, these entries may be hourly or 3-hourly.
 3.  Constructs a Pandas `DataFrame` with exactly the 11 features in the stored order.
 4.  Calls `_model.predict()` in a single batch operation (inference time ≈ 1 ms).
 5.  Rounds the raw regression outputs to integers and clamps them to the valid range `[0, capacity]`.
-6.  Returns a JSON array of `{forecast_time, predicted_available_bikes}` objects.
+6.  Returns the predictions inside the standard API response envelope (`{"code", "msg", "data": [...]}`), where `data` is an array of `{forecast_time, predicted_available_bikes}` objects.
 
 This design keeps the prediction endpoint lightweight and stateless: all heavy computation happens once at training time, and runtime inference requires only a deterministic matrix multiplication through the pre-built forest.
 
