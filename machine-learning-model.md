@@ -1,6 +1,6 @@
 # Machine Learning Model
 
-This chapter describes the machine-learning component of the Dublin Bikes project, whose purpose is to predict the number of available bikes at any given station for the upcoming 24–48 hours. The complete training and evaluation code is version-controlled in the main repository under `flask-app/machine_learning/ml.ipynb`, together with the exported artefacts `bike_availability_model.pkl` and `model_features.pkl`.
+This chapter describes the machine-learning component of the Dublin Bikes project, whose purpose is to predict the number of available bikes at any given station for every weather-forecast entry currently cached in the database (typically the next 1–5 days, depending on the OpenWeatherMap tier in use). The complete training and evaluation code is version-controlled in the main repository under `flask-app/machine_learning/ml.ipynb`, together with the exported artefacts `bike_availability_model.pkl` and `model_features.pkl`.
 
 ## 1. Problem Definition and Target Variable
 
@@ -9,7 +9,7 @@ The business objective is to help users decide *when* and *where* to pick up a b
 *   **Target variable:** `num_bikes_available` – the number of bikes that can be rented from a station at a specific point in time.
 *   **Inputs:** A vector of temporal, spatial, and meteorological features that are known in advance or can be observed at prediction time.
 
-Predictions are produced in bulk for every forecast entry stored in the `weather_forecast` table, and the results are exposed to the frontend via the `/api/stations/<station_id>/prediction` endpoint.
+Predictions are produced in bulk for every forecast entry stored in the `weather_forecast` table whose `forecast_time` is at or after the current hour, and the results are exposed to the frontend via the `GET /api/stations/<number>/prediction` endpoint, where `<number>` is the JCDecaux station number used as the primary key in the `station` table.
 
 ## 2. Dataset and Data-Cleaning Process
 
@@ -45,18 +45,19 @@ The averages were preferred over the raw min/max pairs because they reduce colli
 
 ### 2.4 Final Feature Set
 
-The model therefore learns from **11 input features**:
+The model therefore learns from **11 input features**, in the exact order required by the serialised pipeline:
 
-1.  `station_id` – unique station identifier.
-2.  `capacity` – total number of docking stands at the station.
-3.  `lat` / `lon` – station latitude and longitude.
-4.  `hour` – hour of day (0–23).
-5.  `day` – day of month (1–31).
-6.  `day_of_week` – weekday index (0–6).
-7.  `is_weekend` – weekend flag (0/1).
-8.  `avg_temperature` – mean air temperature (°C).
-9.  `avg_humidity` – mean relative humidity (%).
-10. `avg_pressure` – mean barometric pressure (hPa).
+1.  `station_id` – the JCDecaux station number (stored in the `station.number` column and passed through as `station_id` for historical compatibility with the training data).
+2.  `capacity` – total number of docking stands at the station (`station.bike_stands`).
+3.  `lat` – station latitude.
+4.  `lon` – station longitude.
+5.  `hour` – hour of day (0–23).
+6.  `day` – day of month (1–31).
+7.  `day_of_week` – weekday index (0–6, Monday = 0).
+8.  `is_weekend` – weekend flag (0/1).
+9.  `avg_temperature` – mean air temperature (°C).
+10. `avg_humidity` – mean relative humidity (%).
+11. `avg_pressure` – mean barometric pressure (hPa).
 
 All features are numeric, which avoids the need for categorical encoding and keeps the production inference pipeline simple.
 
@@ -125,16 +126,16 @@ The trained Random Forest and the ordered feature list were serialised with `pic
 *   `flask-app/machine_learning/bike_availability_model.pkl`
 *   `flask-app/machine_learning/model_features.pkl`
 
-At application start-up, `app/__init__.py` pre-loads these artefacts into global memory via `_load_model()` in `app/services/prediction_service.py`. When a user requests predictions for a specific station, the service:
+At application start-up, `app/__init__.py` invokes `_load_model()` from `app/services/prediction_service.py` inside the Flask app context to pre-warm the model and feature list into module-level globals, so that no disk I/O is required on the request path. When a user requests predictions for a specific station, the service:
 
-1.  Retrieves the station’s static metadata (`capacity`, `lat`, `lon`) from the `station` table.
-2.  Fetches the upcoming weather forecasts from the `weather_forecast` table (populated continuously by the scraper). Depending on the API tier available at runtime, these entries may be hourly or 3-hourly.
-3.  Constructs a Pandas `DataFrame` with exactly the 11 features in the stored order.
-4.  Calls `_model.predict()` in a single batch operation (inference time ≈ 1 ms).
-5.  Rounds the raw regression outputs to integers and clamps them to the valid range `[0, capacity]`.
-6.  Returns the predictions inside the standard API response envelope (`{"code", "msg", "data": [...]}`), where `data` is an array of `{forecast_time, predicted_available_bikes}` objects.
+1.  Retrieves the station’s static metadata (`number`, `bike_stands`, `latitude`, `longitude`) from the `station` table.
+2.  Fetches every entry in the `weather_forecast` table whose `forecast_time` is at or after the current UTC hour, ordered ascending. The table is populated continuously by the scraper, so the forecast horizon depends on the active OpenWeatherMap tier (free 5-day/3-hour, or paid hourly).
+3.  Constructs a Pandas `DataFrame` with exactly the 11 features above and reorders the columns to match the persisted `model_features.pkl` list before calling `predict`.
+4.  Calls `_model.predict(df_input)` in a single batch operation.
+5.  Rounds the raw regression outputs to integers and clamps them to the valid range `[0, station.bike_stands]`.
+6.  Returns the predictions inside the standard API response envelope. On success the route emits `{"code": 0, "msg": "ok", "data": [...]}` with HTTP 200, where each item in `data` is `{"forecast_time": <ISO 8601 string>, "predicted_available_bikes": <int>}`. Domain errors (unknown station, no forecast available) yield `{"code": 1, "msg": <reason>, "data": null}` with HTTP 400, while unexpected failures yield `{"code": 1, "msg": "Prediction service unavailable", "data": null, "error": <exception text>}` with HTTP 500.
 
-This design keeps the prediction endpoint lightweight and stateless: all heavy computation happens once at training time, and runtime inference requires only a deterministic matrix multiplication through the pre-built forest.
+This design keeps the prediction endpoint lightweight and stateless: all heavy computation happens once at training time, and runtime inference is a single batched call into the cached Random Forest with no per-request I/O beyond the station and forecast queries.
 
 ## 5. Reflection and Future Work
 
