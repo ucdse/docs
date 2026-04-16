@@ -1,6 +1,6 @@
 # Machine Learning Model
 
-This chapter describes the machine-learning component of the Dublin Bikes project, whose purpose is to predict the number of available bikes at any given station for every weather-forecast entry currently cached in the database (typically the next 1–5 days, depending on the OpenWeatherMap tier in use). The complete training and evaluation code is version-controlled in the main repository under `flask-app/machine_learning/ml.ipynb`, together with the exported artefacts `bike_availability_model.pkl` and `model_features.pkl`.
+This chapter describes the machine-learning component of the Dublin Bikes project, whose purpose is to predict the number of available bikes at any given station for every weather-forecast entry currently cached in the database. **In the current implementation, only forecast rows up to 48 hours ahead of the current UTC hour are stored:** `scraper/fetch_weather.py` drops any OpenWeatherMap forecast whose timestamp is more than 48 hours after the current hour boundary, even though the API response may list roughly five days of 3-hour slots on typical tiers. The complete training and evaluation code is version-controlled in the main repository under `flask-app/machine_learning/ml.ipynb`, together with the exported artefacts `bike_availability_model.pkl` and `model_features.pkl`.
 
 ## 1. Problem Definition and Target Variable
 
@@ -61,6 +61,8 @@ The model therefore learns from **11 input features**, in the exact order requir
 
 All features are numeric, which avoids the need for categorical encoding and keeps the production inference pipeline simple.
 
+**Training vs production for `avg_*`:** During training, `avg_temperature`, `avg_humidity`, and `avg_pressure` are computed as described above (arithmetic means of Met Éireann **daily** minimum and maximum columns). At inference time, the Flask service reuses the same three feature names but supplies the **single** OpenWeatherMap forecast values for that hour (`temperature`, `humidity`, `pressure` from each `weather_forecast` row). The naming is kept so the column order matches `model_features.pkl`; the underlying distributions therefore differ from training not only because the provider changes but also because the features are hourly point forecasts rather than daily min/max aggregates.
+
 ## 3. Training and Testing Process
 
 ### 3.1 Train–Test Split
@@ -103,7 +105,7 @@ Table 1 summarises the out-of-sample performance of each candidate.
 
 Linear Regression performs poorly (R² ≈ 0.08), confirming that bike availability has strong non-linear relationships with time and location that a linear model cannot capture. Gradient Boosting also under-performs in this first comparison, likely because its default shallow-tree configuration is insufficient for the complex spatial and temporal interactions present in the data.
 
-The Decision Tree achieves the lowest MAE (0.970) and the highest R² (0.941) on this single hold-out split. However, a single deep decision tree is prone to over-fitting; its superior numbers here may reflect memorisation rather than generalisation. The Random Forest, while worse on this particular test split, offers a more conservative and stable ensemble prediction. Because the ultimate goal is a production service that must generalise to unseen future days and weather conditions, the **Random Forest Regressor was selected as the final model** and exported for the Flask backend.
+The Decision Tree achieves the lowest MAE (0.970) and the highest R² (0.941) on this single hold-out split. However, a single deep decision tree is prone to over-fitting; its superior numbers here may reflect memorisation rather than generalisation. The Random Forest, while worse on this particular test split, offers a more conservative and stable ensemble prediction. Because the ultimate goal is a production service that must generalise to unseen future days and weather conditions, the **Random Forest Regressor was chosen as the final model** and exported for the Flask backend. The notebook does **not** pick the candidate with the best validation metric automatically: it assigns `best_model = models['Random Forest']` and serialises that object, in line with the stability rationale above.
 
 ### 4.2 Feature Importance
 
@@ -129,7 +131,7 @@ The trained Random Forest and the ordered feature list were serialised with `pic
 At application start-up, `app/__init__.py` invokes `_load_model()` from `app/services/prediction_service.py` inside the Flask app context to pre-warm the model and feature list into module-level globals, so that no disk I/O is required on the request path. When a user requests predictions for a specific station, the service:
 
 1.  Retrieves the station’s static metadata (`number`, `bike_stands`, `latitude`, `longitude`) from the `station` table.
-2.  Fetches every entry in the `weather_forecast` table whose `forecast_time` is at or after the current UTC hour, ordered ascending. The table is populated continuously by the scraper, so the forecast horizon depends on the active OpenWeatherMap tier (free 5-day/3-hour, or paid hourly).
+2.  Fetches every entry in the `weather_forecast` table whose `forecast_time` is at or after the current UTC hour, ordered ascending. Those rows are written by `scraper/fetch_weather.py` (for example when `main_scraper.py` runs and its background `weather_worker` thread calls `fetch_weather_and_store()` on a fixed interval). **Forecast horizon in the database is capped at 48 hours** from the current hour, independent of how much data the OpenWeatherMap API returns. If no process runs the weather ingest, the table will not refresh and predictions will fail—only the bike-station scrape loop is not sufficient by itself.
 3.  Constructs a Pandas `DataFrame` with exactly the 11 features above and reorders the columns to match the persisted `model_features.pkl` list before calling `predict`.
 4.  Calls `_model.predict(df_input)` in a single batch operation.
 5.  Rounds the raw regression outputs to integers and clamps them to the valid range `[0, station.bike_stands]`.
@@ -148,7 +150,7 @@ This design keeps the prediction endpoint lightweight and stateless: all heavy c
 ### 5.2 Limitations
 
 *   **Temporal scope:** The training data span a single month (December 2024). Consequently, the model has not learned seasonal effects such as summer tourism peaks or university semester schedules.
-*   **Weather-source mismatch:** The model was trained on historical Met Éireann observations, yet production inference uses OpenWeatherMap forecasts. Although the variables are conceptually the same (temperature, humidity, pressure), small distributional differences between the two providers may introduce slight prediction drift.
+*   **Weather-source and feature semantics:** The model was trained on historical Met Éireann fields aggregated into `avg_*` from **daily** min/max columns, while production inference uses OpenWeatherMap **hourly** scalars under the same feature names (see §2.4). Provider differences and this construction mismatch both contribute to possible prediction drift.
 *   **Decision Tree anomaly:** The single Decision Tree outperformed the Random Forest on the test split, which is unusual. This suggests that the ensemble may benefit from additional hyper-parameter tuning (e.g. increasing `max_depth` or `n_estimators`, or adding more regularisation to the Decision Tree baseline) to squeeze out extra performance without sacrificing stability.
 
 ### 5.3 Future Improvements
