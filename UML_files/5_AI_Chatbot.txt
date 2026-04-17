@@ -1,0 +1,71 @@
+@startuml
+title UniBikes - AI Chatbot Interaction Flow
+
+actor "Web User" as User
+participant "React Frontend\n(ChatPage)" as UI
+participant "Flask API\n(ChatRoutes)" as API
+participant "ChatService" as CS
+participant "Database\n(Session/ChatHistory Models)" as DB
+participant "LLM Provider\n(External API)" as LLM
+
+User -> UI: Types question in chatbox
+activate UI
+
+UI -> API: chat(session_id, user_message)
+activate API
+
+API -> API: _require_auth()
+
+API -> CS: generate_chat_response(session_id, user_message, user_id)
+activate CS
+
+CS -> CS: _ensure_session(session_id, user_id)
+activate CS
+CS -> DB: find or create Session()
+activate DB
+DB --> CS: Session Metadata
+deactivate DB
+deactivate CS
+
+CS -> DB: write ChatHistory (user_message)
+activate DB
+DB --> CS: success
+deactivate DB
+
+CS -> DB: get_session_messages(session_id, user_id)
+activate DB
+DB --> CS: history context list
+deactivate DB
+
+CS -> CS: _map_role(history)
+
+CS -> LLM: API Request (history context + prompt)
+activate LLM
+LLM --> CS: Generated Text Response
+deactivate LLM
+
+CS -> DB: write ChatHistory (response)
+activate DB
+DB --> CS: success
+deactivate DB
+
+opt is_first_message
+    CS -> CS: _generate_title(session_id, user_message)
+    activate CS
+    CS -> DB: update Session.title
+    activate DB
+    DB --> CS: success
+    deactivate DB
+    deactivate CS
+end
+
+CS --> API: responseText JSON
+deactivate CS
+
+API --> UI: message payload JSON
+deactivate API
+
+UI --> User: Display intelligent chatbot reply
+deactivate UI
+
+@enduml

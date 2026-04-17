@@ -1,0 +1,65 @@
+@startuml
+title DublinBikes - Entity Relationship Diagram
+
+entity "station_info" as Station {
+  * station_number : INT <<PK>>
+  --
+  name : VARCHAR(100)
+  address : VARCHAR(200)
+  pos_lat : FLOAT
+  pos_lng : FLOAT
+  banking : BOOLEAN
+}
+
+entity "availability_log" as Availability {
+  * log_id : INT <<PK>>
+  --
+  station_number : INT <<FK>>
+  timestamp : DATETIME
+  available_bikes : INT
+  available_bike_stands : INT
+  status : VARCHAR(20)
+}
+
+entity "weather_log" as Weather {
+  * weather_id : INT <<PK>>
+  --
+  timestamp : DATETIME
+  temp : FLOAT
+  wind_speed : FLOAT
+  rain : FLOAT
+  description : VARCHAR(50)
+}
+
+entity "user" as User {
+  * id : INT <<PK>>
+  --
+  username : VARCHAR(64) <<UNIQUE>>
+  email : VARCHAR(120) <<UNIQUE>>
+  password_hash : VARCHAR(256)
+  is_active : BOOLEAN
+  token_version : INT
+  created_at : DATETIME
+}
+
+entity "sessions" as Session {
+  * id : VARCHAR(64) <<PK>>
+  --
+  user_id : INT <<FK>>
+  title : VARCHAR(100)
+  created_at : DATETIME
+  updated_at : DATETIME
+}
+
+entity "message_store" as ChatHistory {
+  * id : INT <<PK>>
+  --
+  session_id : VARCHAR(64) <<FK>>
+  message : JSON
+}
+
+Station ||--o{ Availability : "has many logs"
+User ||--o{ Session : "owns"
+Session ||--o{ ChatHistory : "contains messages"
+
+@enduml

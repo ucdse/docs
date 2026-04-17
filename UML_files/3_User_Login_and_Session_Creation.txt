@@ -1,0 +1,37 @@
+@startuml
+title UniBikes - User Login & Session Creation
+
+actor "Web User" as User
+participant "React Frontend\n(LoginPage)" as UI
+participant "Flask API\n(UserRoutes)" as API
+participant "UserService" as US
+participant "Database\n(User Model)" as DB
+
+User -> UI: Enter Email & Password
+activate UI
+
+UI -> API: login(identifier, password) : HTTP POST
+activate API
+
+API -> US: login_user(identifier, password)
+activate US
+
+US -> DB: query User by email
+activate DB
+DB --> US: user_record
+deactivate DB
+
+US -> US: check password_hash matches
+US -> US: create_access_token()
+US -> US: create_refresh_token()
+
+US --> API: auth_tokens (JSON)
+deactivate US
+
+API --> UI: auth_tokens
+deactivate API
+
+UI --> User: Navigate to App Dashboard
+deactivate UI
+
+@enduml

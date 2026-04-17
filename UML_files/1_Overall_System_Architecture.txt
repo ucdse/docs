@@ -1,0 +1,52 @@
+@startuml
+title DublinBikes - Overall System Architecture
+
+actor "Web User" as User
+node "Client Device" {
+    package "React Web Application (Multi-Page)" {
+        [User Auth/Profile UI] as AuthUI
+        [Journey Planner UI] as JourneyUI
+        [AI Chatbot UI] as ChatUI
+    }
+}
+
+node "AWS EC2 Instance (t3.micro)" {
+    node "Flask Backend Server" {
+        [User & Session Modules] as UserMod
+        [Journey & Prediction Modules] as JourneyMod
+        [Chat & LLM Modules] as ChatMod
+    }
+    
+    node "Background Scrapers" {
+        [JCDecaux Scraper] as JCD
+        [Weather Scraper] as Weather
+    }
+}
+
+database "AWS RDS\n(MySQL Database)" as DB
+
+cloud "External Services" {
+    [JCDecaux API] as JCDApi
+    [OpenWeatherMap API] as WeatherApi
+    [LLM API / External] as LLMApi
+}
+
+User --> AuthUI : Interacts
+User --> JourneyUI : Interacts
+User --> ChatUI : Interacts
+
+AuthUI <--> UserMod : REST (JSON)
+JourneyUI <--> JourneyMod : REST (JSON)
+ChatUI <--> ChatMod : REST (JSON)
+
+UserMod --> DB : Queries/Writes Sessions
+JourneyMod --> DB : Queries Station Data
+ChatMod --> DB : Reading/Writing Chats
+ChatMod --> LLMApi : NLP Queries
+
+JCD --> JCDApi : Fetches Availability
+Weather --> WeatherApi : Fetches Forecast
+JCD --> DB : Writes
+Weather --> DB : Writes
+
+@enduml

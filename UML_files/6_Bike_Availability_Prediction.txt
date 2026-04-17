@@ -1,0 +1,48 @@
+@startuml
+title DublinBikes - Bike Availability Prediction Pipeline
+
+actor "Web User" as User
+participant "React Frontend\n(SearchMapsPage)" as UI
+participant "Flask API\n(StationRoutes)" as API
+participant "PredictionService" as PS
+participant "WeatherService" as WS
+participant "Database\n(WeatherForecast/Station)" as DB
+participant "Scikit-Learn\n(RandomForestRegressor)" as ML
+
+User -> UI: Clicks station to see chart
+activate UI
+
+UI -> API: get_station_prediction(number)
+activate API
+
+API -> PS: get_station_predictions(station_id)
+activate PS
+
+' Needs Weather
+PS -> WS: get_weather()
+activate WS
+WS -> DB: query WeatherForecast
+activate DB
+DB --> WS: weather forecast records
+deactivate DB
+WS --> PS: weather context dictionary
+deactivate WS
+
+' Construct Features
+PS -> PS: gather historical timeline features
+
+PS -> ML: predict(features_array)
+activate ML
+ML --> PS: numeric array (predicted_bikes, predicted_stands)
+deactivate ML
+
+PS --> API: List<Dict> (timestamps + predictions)
+deactivate PS
+
+API --> UI: prediction array JSON
+deactivate API
+
+UI --> User: Render Data Chart component
+deactivate UI
+
+@enduml

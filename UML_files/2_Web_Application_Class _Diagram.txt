@@ -1,0 +1,222 @@
+@startuml
+title DublinBikes - Web Application Class Diagram 
+
+' =====================================
+' SCRAPER SUBSYSTEM
+' =====================================
+package "Scraper Subsystem" {
+  
+  class FetchStations {
+    +API_KEY : String
+    +fetch_stations()
+  }
+
+  class FetchWeather {
+    +API_KEY : String
+    +get_lat_lon_for_city(city: str)
+    +fetch_weather_and_store()
+  }
+
+  class DatabaseManager {
+    +get_db_connection() : Connection
+    +create_tables()
+    +insert_station_data(station_list : List)
+    +insert_weather_data(weather_data : dict)
+  }
+}
+
+' =====================================
+' FLASK APP SUBSYSTEM
+' =====================================
+package "Flask App Subsystem" {
+    
+  package "models (Domain Entities)" {
+    class Station {
+      __tablename__ = "station"
+      +number : Integer
+      +name : String
+    }
+
+    class Availability {
+      __tablename__ = "availability"
+      +id : Integer
+      +available_bikes : Integer
+      +available_bike_stands : Integer
+    }
+
+    class WeatherForecast {
+      __tablename__ = "weather"
+      +id : Integer
+      +temp : Float
+      +to_dict()
+    }
+
+    class User {
+      __tablename__ = "user"
+      +id : Integer
+      +email : String
+      +password_hash : String
+    }
+
+    class Session {
+      __tablename__ = "session"
+      +id : Integer
+      +user_id : Integer
+      +token : String
+      +utcnow()
+    }
+
+    class ChatHistory {
+      __tablename__ = "chat_history"
+      +id : Integer
+      +user_id : Integer
+      +message : String
+      +response : String
+    }
+  }
+
+  package "services (Software Internal Classes)" {
+    class PredictionService {
+      -rf_model : RandomForestRegressor
+      +_load_model()
+      +get_station_predictions(station_id: int)
+    }
+
+    class WeatherService {
+      +get_weather()
+    }
+
+    class StationService {
+      +list_stations()
+      +get_recent_station_availability(number, lookback)
+      +get_all_stations_latest_availability()
+      +_availability_to_dict()
+      +_station_to_dict()
+    }
+    
+    class UserService {
+      +create_access_token()
+      +create_refresh_token()
+      +verify_access_token()
+      +verify_refresh_token()
+      +login_user()
+      +refresh_tokens()
+      +logout_user()
+      +register_user()
+      +send_verification_code()
+      +activate_user()
+      +activate_by_token()
+      +serialize_user()
+    }
+
+    class JourneyService {
+      +get_matrix_durations(origins, destinations, mode="walking")
+      +find_best_route(start_lat, start_lon, end_lat, end_lon)
+    }
+
+    class ChatService {
+      +get_chat_history(session_id: str)
+      +generate_session_id(user_id: int, chat_id: str)
+      +get_session_messages(session_id: str, user_id: int)
+      +generate_chat_response(session_id: str, user_message, user_id)
+      +generate_chat_stream(session_id, user_message, user_id)
+      +_ensure_session()
+      +_generate_title()
+      +_map_role()
+    }
+  }
+
+  package "api (Controllers)" {
+    class StationRoutes {
+      +list_stations()
+      +get_station_availability(number: int)
+      +get_all_stations_status()
+      +get_station_prediction(number: int)
+    }
+    class JourneyRoutes {
+      +plan_journey()
+      +_safe_geocode(address)
+    }
+    class UserRoutes {
+      +register()
+      +send_code()
+      +activate()
+      +activate_by_token_route()
+      +login()
+      +refresh()
+      +logout()
+      +me()
+      +_validation_error_message()
+    }
+    class ChatRoutes {
+      +chat()
+      +chat_stream_api()
+      +list_sessions()
+      +get_session_history(session_id: str)
+      +_require_auth()
+    }
+    class WeatherRoutes {
+      +get_weather_forecast()
+      +_validation_error_message()
+    }
+  }
+}
+
+' =====================================
+' REACT FRONTEND (UI Components)
+' =====================================
+package "React Frontend Subsystem" {
+  class LoginPage <<UI>>
+  class RegisterPage <<UI>> 
+  class VerifyEmailPage <<UI>>
+  class ProfilePage <<UI>>
+  class SearchMapsPage <<UI>>
+  class ChatPage <<UI>>
+  class HomePage <<UI>>
+}
+
+' =====================================
+' RELATIONSHIPS AND DEPENDENCIES
+' =====================================
+
+' 1. STRUCTURAL RELATIONS (Aggregations & Compositions)
+User "1" *-- "0..*" Session : owns
+User "1" *-- "0..*" ChatHistory : owns
+Station "1" o-- "0..*" Availability : aggregates
+
+' 2. ASSOCIATIONS & DEPENDENCIES
+
+' Scraper logical flows
+FetchStations ..> DatabaseManager : persists via >
+FetchWeather ..> DatabaseManager : persists via >
+FetchStations ..> Station : instantiates >
+FetchStations ..> Availability : instantiates >
+FetchWeather ..> WeatherForecast : instantiates >
+
+' API routes using services (Software Internal Classes -> Dependency)
+StationRoutes ..> StationService : <<use>>
+StationRoutes ..> PredictionService : <<use>>
+JourneyRoutes ..> JourneyService : <<use>>
+UserRoutes ..> UserService : <<use>>
+ChatRoutes ..> ChatService : <<use>>
+WeatherRoutes ..> WeatherService : <<use>>
+
+' Services processing ORM Models
+StationService ..> Station : queries >
+StationService ..> Availability : queries >
+PredictionService ..> Station : queries (features) >
+UserService ..> User : creates/queries >
+ChatService ..> Session : manages >
+ChatService ..> ChatHistory : writes >
+
+' React connecting to APIs via REST
+LoginPage ..> UserRoutes : HTTP POST >
+RegisterPage ..> UserRoutes : HTTP POST >
+VerifyEmailPage ..> UserRoutes : HTTP POST >
+ProfilePage ..> UserRoutes : HTTP GET /me >
+SearchMapsPage ..> StationRoutes : HTTP GET/POST >
+SearchMapsPage ..> JourneyRoutes : HTTP POST >
+ChatPage ..> ChatRoutes : HTTP GET/POST >
+HomePage ..> WeatherRoutes : HTTP GET >
+
+@enduml

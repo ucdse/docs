@@ -1,0 +1,49 @@
+@startuml
+title DublinBikes - Plan Journey with ETA
+
+actor "Web User" as User
+participant "React Frontend\n(SearchMapsPage)" as UI
+participant "Flask API\n(JourneyRoutes)" as API
+participant "JourneyService" as JS
+participant "Database\n(Station/Availability)" as DB
+participant "GoogleMaps API" as Gmaps
+
+User -> UI: Input Start/End Address
+activate UI
+
+UI -> API: plan_journey(start_lat, start_lon, end_lat, end_lon)
+activate API
+
+API -> JS: find_best_route(start_lat, start_lon, end_lat, end_lon)
+activate JS
+
+JS -> DB: fetch latest Station & Availability
+activate DB
+DB --> JS: active stations list
+deactivate DB
+
+' Calculate Matrix
+JS -> JS: filter closest operative stations
+
+JS -> Gmaps: get_matrix_durations(origins, destinations, mode="walking")
+activate Gmaps
+Gmaps --> JS: walking_durations list
+deactivate Gmaps
+
+JS -> Gmaps: get_matrix_durations(starts, ends, mode="bicycling")
+activate Gmaps
+Gmaps --> JS: cycling_durations list
+deactivate Gmaps
+
+JS -> JS: calculate minimal total_time (Walk + Cycle)
+
+JS --> API: best_route (dictionary)
+deactivate JS
+
+API --> UI: best_route JSON
+deactivate API
+
+UI --> User: Render unified Route Polylines
+deactivate UI
+
+@enduml
