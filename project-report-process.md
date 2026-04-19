@@ -128,17 +128,17 @@ Blueprints are registered in `app/api/__init__.py` (`register_blueprints()`). RE
 
 #### `/api/users` (`user_routes.py` + `user_service`)
 
-Pydantic DTOs for JSON. Main routes: `POST /register`; `POST /send-verification-code` (`identifier` = username or email); `POST /activate`, `POST /activate-by-token`; `POST /login` returns `access_token` / `refresh_token` (`AuthTokenVO`); `POST /refresh`; `POST /logout` (Bearer; server bumps `token_version`); `GET /me` (Bearer). Business codes include `40901`–`40903`, `40101`, etc.
+Pydantic DTOs for JSON. Main routes: `POST /register`; `POST /send-verification-code` (`identifier` = username or email); `POST /activate`, `POST /activate-by-token`; `POST /login` returns `access_token` / `refresh_token` (`AuthTokenVO`); `POST /refresh`; `POST /logout` (Bearer; server bumps `token_version`); `GET /me` (Bearer). Business codes: `40001` for `ValidationError` (invalid input on any user endpoint); `40901`–`40903` for conflict errors; `40101` for auth errors (including login with disabled account, which returns HTTP 403 with body code `40101`).
 
 #### `/api/weather` (`weather_routes.py` + `weather_service`)
 
-| GET | `""` (i.e. `/api/weather`) | Reads `WeatherForecast` from DB — up to **6** rows from current hour, shaped like One Call `current` + `hourly`; `WeatherAPIError` 404 if empty |
+| GET | `""` (i.e. `/api/weather`) | Reads `WeatherForecast` from DB — up to **6** rows from current hour, shaped like One Call `current` + `hourly`. Errors return `{"code": 50001, "msg": ..., "data": null}` with HTTP 404 (empty DB) or HTTP 500 (unexpected failure); 404 if empty |
 
 Data is written by the scraper (see §3.2).
 
 #### `/api/journey` (`journey_routes.py` + `journey_service`)
 
-| POST | `/plan` | Requires `GOOGLE_MAPS_API_KEY` for `googlemaps.Client`. Body: either **addresses** `start_address` + `end_address` (geocoded), or **coordinates** `start`/`end` with `lat`/`lon`. Calls `find_best_route()` (stations, availability, Distance Matrix, etc.); returns `route_info` and `search_context.start_resolved` / `end_resolved`; 404 if no suitable stations; Google errors mapped to 502/504, etc. |
+| POST | `/plan` | Requires `GOOGLE_MAPS_API_KEY` for `googlemaps.Client`. Body: either **addresses** `start_address` + `end_address` (geocoded), or **coordinates** `start`/`end` with `lat`/`lon`. Calls `find_best_route()` (stations, availability, Distance Matrix, etc.); returns `route_info` and `search_context.start_resolved` / `end_resolved`. Error codes: `400` for validation errors (missing/invalid fields, no suitable stations); `404` if no suitable stations; `500` for unexpected failures; Google errors mapped to 502/504. |
 
 #### `/api/chat` (`chat_routes.py` + `chat_service`)
 
@@ -149,9 +149,9 @@ All require **`Authorization: Bearer <access_token>`** (`verify_access_token`).
 | POST | `/` | JSON: `message` (required), `chat_id` (optional); `generate_chat_response` → `reply` |
 | POST | `/stream` | Same body; SSE (`text/event-stream`), `generate_chat_stream` |
 | GET | `/sessions` | User’s sessions (`Session`, ordered by `updated_at` desc) |
-| GET | `/sessions/<session_id>/messages` | History; 404 if missing or forbidden |
+| GET | `/sessions/<session_id>/messages` | History; 404 with body `{"code": 404, "msg": "session not found", "data": null}` if missing or forbidden |
 
-Some errors return `{ "error": "..." }` (401), unlike the `code`-style JSON elsewhere — the frontend handles both.
+`POST /` and `POST /stream` return `{ "error": "..." }` for HTTP 401 (auth) and HTTP 400 (validation errors: invalid JSON body or missing `message` field). Unexpected failures in non-streaming chat (`POST /`) return `{"code": 50000, "msg": ..., "data": null}` with HTTP 500. The frontend handles both the `code`-style and `error`-style JSON formats.
 
 ### 3.4 Frontend interaction (`react-app/`)
 
@@ -226,7 +226,7 @@ Typical stage order:
 1. Checkout SCM  
 2. **Python syntax check** — venv, `pip install -r requirements.txt`, `py_compile` on `config.py`, `run.py`, `wsgi.py`, and `app/**/*.py`  
 3. **Tests** — install `pytest` / `pytest-cov`, run `pytest tests/`, publish JUnit  
-4. **Download ML artefacts** — Hugging Face Hub: `bike_availability_model.pkl` and `model_features.pkl` into `machine_learning/` (credentials: `huggingface-token`)  
+4. **Download ML artefacts** — Hugging Face Hub repository `ucdse/bike_availability_model`: downloads `bike_availability_model.pkl` and `model_features.pkl` into `machine_learning/` (credentials: `huggingface-token`)  
 5. **Docker build & push** — optional via `PUSH_IMAGE` / `DEPLOY_TO_EC2`  
 6. **Deploy to EC2** — only when branch is **`main`** and the build is **not** a pull request: SSH to host from `aws-ec2` credential, upload `flask-prod.env`, `docker pull`, `docker run` on network `flask-app` with `--env-file` (default `/opt/flask-app/.env`)
 
