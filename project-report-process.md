@@ -279,7 +279,7 @@ In this sprint, our primary goal was Requirements Engineering and Data Collectio
 
 **Burndown chart:**
 
-*[Burndown chart available in Sprint 1 review document](sprint_review/Sprint%201%20review.docx)*
+![Burndown chart for Sprint 1](sprint_review/images/burndown-sprint-1.png)
 
 The Burndown chart shows a steep decline in remaining effort. Our "Actual Remaining Effort" line dropped below the "Ideal Trend" line around Day 4, indicating that the team worked faster than anticipated. We reached zero remaining tasks 2 days before the sprint deadline. This high velocity allowed us to dedicate the remaining time to backlog refinement and researching the feasibility of optional features.
 
@@ -317,7 +317,7 @@ For the project's technical infrastructure, a git **feature branch workflow** wa
 
 **Burndown chart:**
 
-*[Burndown chart available in Sprint 2 review document](sprint_review/Sprint%202%20review.docx)*
+![Burndown chart for Sprint 2](sprint_review/images/burndown-sprint-2.png)
 
 The burndown chart displays a staircase pattern which directly reflects the project requirement to update the chart every two days. Despite these mandated reporting intervals, the actual remaining effort dropped below the ideal available trend line by Day 4 and remained beneath it for the rest duration of the sprint. This demonstrates that a strong development velocity was maintained by the team. All sprint goals were completed by Day 10.
 
@@ -360,7 +360,7 @@ Thanks to the usage of CI/CD, namely **Jenkins**, our production application kee
 
 **Burndown chart:**
 
-*[Burndown chart available in Sprint 3 review document](sprint_review/Sprint%203%20review.docx)*
+![Burndown chart for Sprint 3](sprint_review/images/burndown-sprint-3.png)
 
 **Sprint Review:**
 
@@ -404,7 +404,7 @@ In this sprint, our primary goal was **Machine Learning Integration and System F
 
 **Burndown chart:**
 
-*[Burndown chart available in Sprint 4 review document](sprint_review/Sprint%204%20review.docx)*
+![Burndown chart for Sprint 4](sprint_review/images/burndown-sprint-4.png)
 
 The Burndown chart illustrates a steady progression with a few plateaus, reflecting the complexity of our final integration tasks. Our "Points Remaining" line stayed slightly above the "Available" trend line during the middle of the sprint (Days 3–5) as the team was deeply involved in fine-tuning the machine learning algorithms and resolving frontend-backend API formatting issues. However, following a steep drop around Day 7, we regained our high velocity and successfully reached zero remaining tasks on Day 9, one day before the sprint deadline. This efficient completion allowed us to dedicate the final day strictly to code refactoring, ensuring UI consistency, and compiling our final project report.
 
