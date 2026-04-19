@@ -1,6 +1,6 @@
 # Frontend
 
-在项目前端工程化的起步阶段，我最初对于如何选择React项目脚手架感到困惑——传统的`create-react-app`已经停止维护，而Vite等新型构建工具是否适用于生产级项目尚不确定。在与AI的讨论中，它帮我系统对比了`Vite`与`create-react-app`在构建速度、热更新机制以及React 19兼容性方面的差异，最终建议我通过`npm create vite@latest`命令搭建基于`React 19`加`TypeScript`的项目骨架。在此基础上，AI还指导我完成了React函数式组件与Hooks范式下的核心概念学习——从`useState`、`useEffect`的基本用法到`useContext`的全局状态传播，再到路由管理中`React Router v6`的`loader`与`action`声明式数据流，这些由AI逐步梳理的学习路径使我快速跨越了从类组件到函数式组件的思维转换。
+在本项目（**Dublin Bike Usage Prediction**）的前端工程化起步阶段，我最初对于如何选择React项目脚手架感到困惑——传统的`create-react-app`已经停止维护，而Vite等新型构建工具是否适用于生产级项目尚不确定。在与AI的讨论中，它帮我系统对比了`Vite`与`create-react-app`在构建速度、热更新机制以及React 19兼容性方面的差异，最终建议我通过`npm create vite@latest`命令搭建基于`React 19`加`TypeScript`的项目骨架。在此基础上，AI还指导我完成了React函数式组件与Hooks范式下的核心概念学习——从`useState`、`useEffect`的基本用法到`useContext`的全局状态传播，再到路由管理中`React Router v6`的`loader`与`action`声明式数据流，这些由AI逐步梳理的学习路径使我快速跨越了从类组件到函数式组件的思维转换。
 
 在**地图交互页面**的开发过程中，多模态路线导航查询的实现一度成为瓶颈。我需要同时处理`google.maps.places.Autocomplete`的地点自动补全、步行—骑行—步行三段式多色折线的并发渲染，以及视口的智能缩放。AI协助我构建了基于Autocomplete的响应式循环，从TypeScript类型层面理清了前端状态管理的层次关系，并帮助我实现了三段不同颜色折线在同一条路线上的叠加渲染，同时为`fitBounds`方法封装了自动缩放逻辑，使地图视口能够智能地对所有途经点进行居中展示。
 
@@ -8,7 +8,9 @@
 
 # Backend
 
-在后端架构的设计与实现中，我首先面对的是Flask应用工厂模式的选型与搭建。AI帮助我梳理了`create_app()`工厂函数的组织方式，指导我将扩展初始化（`SQLAlchemy`、`Flask-Migrate`、`Flask-Mail`、`JWT`等）集中在`app/__init__.py`中统一管理，使应用可以根据不同配置环境灵活创建实例。尤其是在集成核心**机器学习预测流程**与数据库的环节，我遭遇了严重的冷启动延迟问题——我最初的"懒加载"设计导致首次API请求时后端需要动态加载大量数据到模型中进行推理，响应时间极长。AI分析了我的部署环境后，提出了利用Flask App上下文生命周期在应用启动时执行"预热"的架构重构方案：在`prediction_service.py`中将模型和特征数据提前加载到内存中，通过`copy-on-write`机制在内存层面避免重复拷贝。优化后，后端能够在收到请求时瞬时将预测特征送入模型推理，并将结果无卡顿地返回给前端。
+在后端架构的设计与实现中，我首先面对的是Flask应用的入口启动设计。项目通过`run.py`作为开发环境的启动入口，调用`create_app()`创建应用实例后以`debug=True`模式运行；而生产部署则依赖`wsgi.py`作为WSGI服务器的接入点，同样调用`create_app()`但剥离了调试模式。AI帮我明确了这两层入口的职责分离——`run.py`面向开发时热重载，`wsgi.py`面向Gunicorn等生产服务器的标准调用规范。
+
+在Flask应用工厂模式的搭建上，AI帮助我梳理了`create_app()`工厂函数的组织方式，指导我将扩展初始化（`SQLAlchemy`、`Flask-Migrate`、`Flask-Mail`、`JWT`等）集中在`app/__init__.py`中统一管理，使应用可以根据不同配置环境灵活创建实例。尤其是在集成核心**机器学习预测流程**与数据库的环节，我遭遇了严重的冷启动延迟问题——我最初的"懒加载"设计导致首次API请求时后端需要动态加载大量数据到模型中进行推理，响应时间极长。AI分析了我的部署环境后，提出了利用Flask App上下文生命周期在应用启动时执行"预热"的架构重构方案：在`prediction_service.py`中将模型和特征数据提前加载到内存中，通过`copy-on-write`机制在内存层面避免重复拷贝。优化后，后端能够在收到请求时瞬时将预测特征送入模型推理，并将结果无卡顿地返回给前端。
 
 在**数据库表设计**方面，AI协助我完成了从需求到SQLAlchemy Model的完整建模。`Station`表以站号`number`为主键，包含`name`、`address`、`position`（经纬度）、`banking`（是否有支付终端）、`bonus`等字段；`Availability`表通过外键关联`station.number`，记录实时可用车辆数与空停车位数；`Weather`表存储天气观测数据；`User`表采用`email_hash`与`password_hash`的加密存储方案，并设置`verified`字段配合邮件验证流程；`Session`表和`ChatHistory`表则支撑了LangChain的`SQLChatMessageHistory`持久化对话机制。AI在每一个表的设计过程中都提示我注意外键约束、索引策略以及字段类型的选择，避免了我早期方案中因`station.number`字段类型不匹配而导致的外键关联失败。
 
