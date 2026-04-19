@@ -277,7 +277,7 @@ Together, this gives a **containerised, repeatable** path from commit to EC2, wi
 
 **Burndown chart:**
 
-![Sprint 1 Burndown Chart](sprint_review/Sprint%201%20review.docx)
+*[Burndown chart available in Sprint 1 review document](sprint_review/Sprint%201%20review.docx)*
 
 The Actual Remaining Effort line dropped below the Ideal Trend line around Day 4, indicating the team worked faster than anticipated. Zero remaining tasks were reached **2 days before the sprint deadline**, allowing time for backlog refinement and feasibility research on optional features.
 
@@ -285,13 +285,13 @@ The Actual Remaining Effort line dropped below the Ideal Trend line around Day 4
 
 1. **Mockup Walkthrough**: Presented Figma/PDF mockups, explaining how the UI solves persona pain points.
 2. **Data Verification**: Demonstrated the live MySQL database with rows of real-time data collected over preceding days, proving scraper stability.
-3. **Scope Discussion**: Since we finished early, we discussed the "Smart Journey Planner" feature. Decision on inclusion was deferred to Sprint 2 Planning.
+3. **Scope Discussion**: Since we finished early, we discussed the "Smart Journey Planner" feature, evaluating whether adding this complex feature fits within our remaining timeline. The decision on inclusion was deferred to Sprint 2 Planning.
 
 **Retrospective (≤250 words):**
 
-**What went well:** Team established a Discord communication channel for daily updates. User interviews validated three personas; tourist persona insights directly influenced map interactivity prioritisation. Web scraping scripts for JCDecaux and OpenWeather APIs were developed ahead of schedule and ran stably, populating the database consistently.
+**What went well:** Team established a Discord communication channel for daily updates. User interviews validated three personas; tourist persona insights — specifically the need for intuitive navigation and weather prediction — directly influenced the decision to prioritise map interactivity. Web scraping scripts for JCDecaux and OpenWeather APIs were developed ahead of schedule and ran stably, populating the database consistently.
 
-**What could be improved:** Some team members were initially unfamiliar with API request mechanics and local MySQL configuration, requiring extra research and troubleshooting time.
+**What could be improved:** Some team members were initially unfamiliar with API request mechanics and local MySQL configuration, requiring extra research and troubleshooting time. However, all tasks were successfully finished in the end. Next time, the team will help each other more to solve technical issues faster.
 
 **For next sprint:** Shift focus to Flask backend set-up and database connection; get scraped data displaying on a live map to satisfy "Real-time" acceptance criteria; conclude feasibility study on the Journey Planner feature.
 
@@ -309,9 +309,9 @@ Git **feature branch workflow** was defined; a **Jenkins CI/CD pipeline** was co
 
 **Burndown chart:**
 
-![Sprint 2 Burndown Chart](sprint_review/Sprint%202%20review.docx)
+*[Burndown chart available in Sprint 2 review document](sprint_review/Sprint%202%20review.docx)*
 
-The burndown chart displays a staircase pattern reflecting the mandated bi-daily reporting intervals. The actual remaining effort dropped below the ideal trend line by Day 4 and remained beneath it, demonstrating strong development velocity. All sprint goals were completed by Day 10.
+The burndown chart displays a staircase pattern reflecting the project requirement to update the chart every two days. The actual remaining effort dropped below the ideal trend line by Day 4 and remained beneath it, demonstrating strong development velocity. All sprint goals were completed by Day 10.
 
 **Sprint Review:**
 
@@ -346,7 +346,7 @@ A **database performance issue** was identified: the MySQL Docker container time
 
 **Burndown chart:**
 
-![Sprint 3 Burndown Chart](sprint_review/Sprint%203%20review.docx)
+*[Burndown chart available in Sprint 3 review document](sprint_review/Sprint%203%20review.docx)*
 
 **Sprint Review:**
 
@@ -359,7 +359,7 @@ A **database performance issue** was identified: the MySQL Docker container time
 
 **What went well:** Basic feature functionality working successfully. Frontend-backend collaboration was errorless. Development and production environments were properly configured; coding and reviewing workflows operated in an ideal state.
 
-**What could be improved:** UI/UX design could be improved with more professional tools and a better colour scheme. **API keys** for bike statistics and Google Maps risk exposure in the frontend console — a security concern for production. AI chat output may be interrupted if the user refreshes or closes the page during LLM streaming; a fix could persist LLM responses to the database before returning to the frontend.
+**What could be improved:** UI/UX design could be improved with more professional tools and a better colour scheme. **The API key** used for bike statistics and Google Maps could be leaked in the frontend console — a security concern for production. AI chat output may be interrupted if the user refreshes or closes the page during LLM streaming; a fix could persist LLM responses to the database before returning to the frontend.
 
 **For next sprint:** Front-end beautification (better colour scheme, UI/UX); AI chat bug fix (persist output before returning to frontend); Machine Learning implementation for bike/stand availability prediction; add unit, integration, and E2E tests.
 
@@ -379,7 +379,7 @@ A **database performance issue** was identified: the MySQL Docker container time
 
 **Burndown chart:**
 
-![Sprint 4 Burndown Chart](sprint_review/Sprint%204%20review.docx)
+*[Burndown chart available in Sprint 4 review document](sprint_review/Sprint%204%20review.docx)*
 
 Steady progression with plateaus during Days 3–5 while fine-tuning ML algorithms and resolving frontend-backend API formatting issues. A steep drop around Day 7 restored velocity; zero remaining tasks reached on Day 9 (one day before deadline). The final day was dedicated to code refactoring, UI consistency, and compiling the project report.
 
