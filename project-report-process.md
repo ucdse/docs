@@ -261,16 +261,141 @@ Together, this gives a **containerised, repeatable** path from commit to EC2, wi
 
 ---
 
-## 7. Sprints (to complete from team records)
+## 7. Sprints
 
-The module requires **for each sprint**: narrative of implemented features and design decisions, a **burndown chart**, **sprint review**, and **sprint retrospective** (max 250 words; also submitted via the official Google Form). Those artefacts depend on your **product backlog** and **sprint backlog** (link them on the title page) and are **not** stored in these three code repositories.
+### Sprint 1 — Requirements Engineering & Data Collection
 
-Use the checklist below when writing each sprint subsection:
+**Features completed and key technical choices:**
 
-- [ ] Features completed and key technical choices (tie to branches/PRs in GitHub if helpful).  
-- [ ] Burndown chart (export from your agile tool).  
-- [ ] Sprint review summary (demo outcomes, stakeholder feedback if any).  
-- [ ] Retrospective (≤250 words) + form submission confirmation.
+1. **User Research**: Defined three key personas (Student, Professional, Tourist) and conducted interviews to validate assumptions. Based on interview feedback — particularly the tourist persona's fear of getting lost — we made a design decision to implement a **"Hover" feature** on map markers for quick information access, distinguishing it from the "Click" action for detailed status.
+
+2. **Project Planning & Design**: Completed User Stories, finalised UI Mockups, and defined acceptance criteria to guide future testing.
+
+3. **Technical Infrastructure**: Set up the MySQL database and developed Python scraping scripts for both **JCDecaux (Bikes)** and **OpenWeather (Weather)** APIs.
+
+4. **Design Decision on Data**: Set the bike scraper interval to **5 minutes**, balancing data granularity with API rate limits and storage efficiency. Scrapers are running and populating the database.
+
+**Burndown chart:**
+
+![Sprint 1 Burndown Chart](sprint_review/Sprint%201%20review.docx)
+
+The Actual Remaining Effort line dropped below the Ideal Trend line around Day 4, indicating the team worked faster than anticipated. Zero remaining tasks were reached **2 days before the sprint deadline**, allowing time for backlog refinement and feasibility research on optional features.
+
+**Sprint Review:**
+
+1. **Mockup Walkthrough**: Presented Figma/PDF mockups, explaining how the UI solves persona pain points.
+2. **Data Verification**: Demonstrated the live MySQL database with rows of real-time data collected over preceding days, proving scraper stability.
+3. **Scope Discussion**: Since we finished early, we discussed the "Smart Journey Planner" feature. Decision on inclusion was deferred to Sprint 2 Planning.
+
+**Retrospective (≤250 words):**
+
+**What went well:** Team established a Discord communication channel for daily updates. User interviews validated three personas; tourist persona insights directly influenced map interactivity prioritisation. Web scraping scripts for JCDecaux and OpenWeather APIs were developed ahead of schedule and ran stably, populating the database consistently.
+
+**What could be improved:** Some team members were initially unfamiliar with API request mechanics and local MySQL configuration, requiring extra research and troubleshooting time.
+
+**For next sprint:** Shift focus to Flask backend set-up and database connection; get scraped data displaying on a live map to satisfy "Real-time" acceptance criteria; conclude feasibility study on the Journey Planner feature.
+
+---
+
+### Sprint 2 — Backend Integration & Deployment Pipeline
+
+**Features completed and key technical choices:**
+
+Developed the **Flask application** as the core backend. Two main services were established: a **Weather API Service** calling the OpenWeatherMap API directly (no DB intervention), and **Station Read APIs** connecting to the MySQL database populated in Sprint 1 to return real-time station and availability rows.
+
+The **Journey Planner** feature was included and implemented. **User Authentication** was integrated: registration and login endpoints using **JWT token creation** and **password hashing** for secure access.
+
+Git **feature branch workflow** was defined; a **Jenkins CI/CD pipeline** was configured to enforce build checks on every branch. Automated deployment to an **AWS EC2** instance triggers on merge to `main`, using `wsgi.py` and **Gunicorn**. On the frontend, an interactive feature was implemented to display detailed station information on user trigger.
+
+**Burndown chart:**
+
+![Sprint 2 Burndown Chart](sprint_review/Sprint%202%20review.docx)
+
+The burndown chart displays a staircase pattern reflecting the mandated bi-daily reporting intervals. The actual remaining effort dropped below the ideal trend line by Day 4 and remained beneath it, demonstrating strong development velocity. All sprint goals were completed by Day 10.
+
+**Sprint Review:**
+
+1. **API Demonstration**: Showcased operational Weather and Station Read APIs returning properly formatted JSON from both live external APIs and the local MySQL database.
+2. **Security & Authentication**: Demonstrated user authentication flow — JWT token generation on login, secure password hashing in the database.
+3. **Pipeline Verification**: Live demo of CI/CD: code push → Jenkins build → automated deployment to EC2.
+4. **Scope Confirmation**: Confirmed successful inclusion and basic backend functionality of the Journey Planner endpoint.
+
+**Retrospective (≤250 words):**
+
+**What went well:** Transition to backend development was successful. Git feature branch workflow and Jenkins CI/CD pipeline accelerated testing and automated EC2 deployments. Early scope resolution enabled delivery of complex backend features (Journey Planner, secure User Login).
+
+**What could be improved:** API endpoints for frontend-backend interaction lacked initial documentation, forcing frontend developers to review backend code for correct routes. The initial Journey Planner codebase missed several edge cases and had flawed route calculation logic, requiring significant refactoring time.
+
+**For next sprint:** Develop user-facing React interfaces for Journey Planner and User Login; migrate database to Amazon RDS for performance; create detailed API documentation for frontend-backend integration.
+
+---
+
+### Sprint 3 — Additional Features & Frontend Implementation
+
+**Features completed and key technical choices:**
+
+The Flask backend application is nearly complete, returning desirable data confirmed via Postman testing.
+
+Three additional features were implemented in essential form: **AI Chat** using the **Langchain framework** and **Aliyun API**; **chat history storage** and **LLM memory** achieved by creating new database tables. When a user logs in, chat history is displayed, allowing selection from the history list.
+
+The **frontend** now displays available bikes and stands data on hover over station icons. Requests are sent automatically on website visit, eliminating latency when the user hovers for statistics.
+
+A **database performance issue** was identified: the MySQL Docker container timed out on queries due to large data volume. **Resolved by migrating from EC2-hosted Docker to AWS RDS**, enabling SQL execution within acceptable timeframes.
+
+**CI/CD** (Jenkins) kept the production application at the latest version throughout development. **Docker** and containerisation deployment technologies were maintained for a professional, normalised process.
+
+**Burndown chart:**
+
+![Sprint 3 Burndown Chart](sprint_review/Sprint%203%20review.docx)
+
+**Sprint Review:**
+
+1. **AI Chat Features**: Successfully implemented three core AI features using Langchain and Aliyun API. Chat history storage and LLM memory demonstrated through new database tables, with history displayed upon user login.
+2. **Backend Completion**: Flask backend nearing completion, confirmed via Postman testing.
+3. **Frontend Data Display**: Available bike/stand data displayed on station icon hover; requests auto-sent on page load to eliminate latency.
+4. **CI/CD & Deployment**: Verified continuous integration and deployment via Jenkins; Docker containerisation confirmed for normalised deployment.
+
+**Retrospective (≤250 words):**
+
+**What went well:** Basic feature functionality working successfully. Frontend-backend collaboration was errorless. Development and production environments were properly configured; coding and reviewing workflows operated in an ideal state.
+
+**What could be improved:** UI/UX design could be improved with more professional tools and a better colour scheme. **API keys** for bike statistics and Google Maps risk exposure in the frontend console — a security concern for production. AI chat output may be interrupted if the user refreshes or closes the page during LLM streaming; a fix could persist LLM responses to the database before returning to the frontend.
+
+**For next sprint:** Front-end beautification (better colour scheme, UI/UX); AI chat bug fix (persist output before returning to frontend); Machine Learning implementation for bike/stand availability prediction; add unit, integration, and E2E tests.
+
+---
+
+### Sprint 4 — Machine Learning Integration & System Finalisation
+
+**Features completed and key technical choices:**
+
+1. **Machine Learning Model**: Cleaned the historical dataset, handled missing values, and performed feature selection to isolate relevant predictors (weather and time). Trained, compared, and evaluated multiple ML algorithms. **Design decision**: exported the best-performing model as a `.pkl` file for fast, efficient inference without retraining overhead.
+
+2. **Full-Stack Integration**: Built React UI components and input forms for the prediction feature. Implemented fetch logic to submit user requests to the Flask backend API, which processes data through the loaded `.pkl` model and returns a JSON response that dynamically renders prediction results on the map.
+
+3. **Quality Assurance**: Designed and implemented comprehensive unit tests across the application, achieving **97% test coverage**.
+
+4. **Design Decision on UI & Performance**: Refined React component visual style for UI consistency. Observed a slight **"cold start" latency** on the first prediction click (model loading into memory). Accepted this minimal initial delay as it optimises server memory; all subsequent requests are fast and seamless.
+
+**Burndown chart:**
+
+![Sprint 4 Burndown Chart](sprint_review/Sprint%204%20review.docx)
+
+Steady progression with plateaus during Days 3–5 while fine-tuning ML algorithms and resolving frontend-backend API formatting issues. A steep drop around Day 7 restored velocity; zero remaining tasks reached on Day 9 (one day before deadline). The final day was dedicated to code refactoring, UI consistency, and compiling the project report.
+
+**Sprint Review:**
+
+1. **Application Demonstration**: Presented the fully functional web application showcasing seamless React–Flask integration, refined UI styling, and consistent design across all pages.
+2. **Machine Learning Verification**: Demonstrated live predictive feature powered by the exported `.pkl` model; explained the "cold start" latency and proved fast subsequent performance.
+3. **Quality Assurance & Next Steps**: Highlighted 97% unit test coverage. Discussed strategy for the final 2-week phase: code refactoring, UI/UX beautification, and compiling the final project report.
+
+**Retrospective (≤250 words):**
+
+**What went well:** Successfully completed the core ML pipeline and delivered the full web application. Efficiently cleaned the dataset, isolated key predictors, and exported the best model as a `.pkl` file integrated into the Flask backend. React UI components were smoothly implemented and styled for consistency. Achieved 97% unit test coverage for a robust, reliable system.
+
+**What could be improved:** Algorithm comparison and model fine-tuning took more time than anticipated. Resolving minor API formatting issues during frontend-backend integration required extra effort. A slight latency on first prediction click was observed (model loading into memory); all subsequent clicks are fast.
+
+**Final Conclusion:** All core development tasks are complete. Data scraping, Flask backend, React frontend, and ML predictions are seamlessly integrated into a fully functional web application.
 
 ---
 
