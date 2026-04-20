@@ -1,0 +1,13 @@
+# Generative AI Usage Declaration - Alex
+
+### Backend
+
+In terms of backend architecture, my primary responsibility was designing the `GET /api/stations/status` API to deliver a real-time availability snapshot across the entire Dublin Bikes network. Initially, querying our massive historical database to find the absolute latest record for each station resulted in severe performance degradation due to unintended full-table scans. When I provided my initial SQLAlchemy draft to the AI, it helped me analyze the database execution plan and identified the bottleneck. It guided me in engineering a highly optimized subquery utilizing `func.max()` grouped by station ID. This precise refactoring ensured the database only retrieved the most recent timestamps, bypassing the need to scan historical rows and maintaining rapid, constant response times regardless of data volume. Furthermore, to ensure seamless integration with the client side, the AI assisted me in verifying the `_availability_to_dict` mapping logic, guaranteeing that the serialized JSON output perfectly aligned with the strict API contract established by the frontend team.
+
+### Frontend
+
+Regarding frontend engineering, my core objective was to bring the backend data to life visually, specifically focusing on the dynamic Google Maps station markers and the machine learning prediction UI. While attempting to asynchronously update the station statuses on the map, I struggled with React re-render optimization, which occasionally caused the map markers to flicker or the UI to freeze during state updates. By discussing the React component lifecycle with the AI, it helped me refine the state management and Google Maps SDK integration, ensuring that live marker updates occurred smoothly without disrupting the user's active viewport. Additionally, when integrating the backend's 24-hour prediction data into the Recharts components, dealing with deeply nested JSON responses led to persistent TypeScript compiler errors. The AI proved invaluable in helping me architect robust TypeScript interfaces to guarantee end-to-end type safety across the data flow.
+
+### Report
+
+In the final delivery of the project documentation, I constructed the initial drafts for the user personas, sprint retrospectives, and final reports, while the AI optimized my preliminary text for better grammatical flow and structured the layout of the reports that I had initially left unformatted.
