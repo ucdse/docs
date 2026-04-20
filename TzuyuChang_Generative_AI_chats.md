@@ -1,5 +1,3 @@
-# Generative AI Usage Declaration - Alex
-
 ### Backend
 
 In terms of backend architecture, my primary responsibility was designing the `GET /api/stations/status` API to deliver a real-time availability snapshot across the entire Dublin Bikes network. Initially, querying our massive historical database to find the absolute latest record for each station resulted in severe performance degradation due to unintended full-table scans. When I provided my initial SQLAlchemy draft to the AI, it helped me analyze the database execution plan and identified the bottleneck. It guided me in engineering a highly optimized subquery utilizing `func.max()` grouped by station ID. This precise refactoring ensured the database only retrieved the most recent timestamps, bypassing the need to scan historical rows and maintaining rapid, constant response times regardless of data volume. Furthermore, to ensure seamless integration with the client side, the AI assisted me in verifying the `_availability_to_dict` mapping logic, guaranteeing that the serialized JSON output perfectly aligned with the strict API contract established by the frontend team.
