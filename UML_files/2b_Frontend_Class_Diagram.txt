@@ -1,0 +1,65 @@
+@startuml
+title DublinBikes - Frontend UI Components Class Diagram
+
+package "React Frontend Subsystem (Pages)" {
+  class LoginPage <<UI>> {
+    -emailInput : String
+    -passwordInput : String
+    +submitCredentials(email : String, password : String) : void
+    +storeTokensLocal(tokens : Map) : void
+    +navigateToDashboard() : void
+  }
+
+  class RegisterPage <<UI>> {
+    -usernameInput : String
+    -emailInput : String
+    -passwordInput : String
+    +submitRegistration() : void
+  }
+
+  class VerifyEmailPage <<UI>> {
+    -verificationCode : String
+    +submitVerification() : void
+  }
+
+  class ProfilePage <<UI>> {
+    -userProfile : Map
+    +fetchProfileData() : void
+    +logout() : void
+  }
+
+  class SearchMapsPage <<UI>> {
+    -startAddress : String
+    -endAddress : String
+    -mapInstance : Object
+    +submitAddresses(start : String, end : String) : void
+    +parseRouteData(bestRoute : Map) : void
+    +renderRoutePolylines() : void
+    +clickStationMarker(stationId : Integer) : void
+    +parsePredictionData(predictionsJson : List<Map>) : void
+    +renderDataChart() : void
+  }
+
+  class ChatPage <<UI>> {
+    -chatHistory : List<Map>
+    -currentMessage : String
+    +submitMessage(userMessage : String) : void
+    +appendMessageToUI(responseJson : Map) : void
+  }
+
+  class HomePage <<UI>> {
+    -weatherInfo : Map
+    -systemStatus : Map
+    +fetchDashboardData() : void
+  }
+}
+
+' Navigation/Dependencies
+LoginPage ..> HomePage : <<navigate>>
+LoginPage ..> RegisterPage : <<navigate>>
+RegisterPage ..> VerifyEmailPage : <<navigate>>
+HomePage ..> SearchMapsPage : <<navigate>>
+HomePage ..> ChatPage : <<navigate>>
+HomePage ..> ProfilePage : <<navigate>>
+
+@enduml

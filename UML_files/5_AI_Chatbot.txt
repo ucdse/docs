@@ -1,14 +1,15 @@
 @startuml
-title UniBikes - AI Chatbot Interaction Flow
+title DublinBikes - AI Chatbot Interaction Flow
 
-actor "Web User" as User
-participant "React Frontend\n(ChatPage)" as UI
-participant "Flask API\n(ChatRoutes)" as API
-participant "ChatService" as CS
-participant "Database\n(Session/ChatHistory Models)" as DB
-participant "LLM Provider\n(External API)" as LLM
+actor User
+participant "chatPage : ChatPage" as UI
+participant "chatRoutes : ChatRoutes" as API
+participant "chatService : ChatService" as CS
+participant "sessionRecord : Session" as SessionObj
+participant "historyRecord : ChatHistory" as HistoryObj
+participant "llmClient : LangChainLLM" as LLM
 
-User -> UI: Types question in chatbox
+User -> UI: submitMessage(user_message)
 activate UI
 
 UI -> API: chat(session_id, user_message)
@@ -21,50 +22,49 @@ activate CS
 
 CS -> CS: _ensure_session(session_id, user_id)
 activate CS
-CS -> DB: find or create Session()
-activate DB
-DB --> CS: Session Metadata
-deactivate DB
+CS -> SessionObj: find_or_create(session_id, user_id)
+activate SessionObj
+SessionObj --> CS: sessionRecord
+deactivate SessionObj
 deactivate CS
 
-CS -> DB: write ChatHistory (user_message)
-activate DB
-DB --> CS: success
-deactivate DB
+CS -> HistoryObj: save_message(session_id, "user", user_message)
+activate HistoryObj
+HistoryObj --> CS: success
+deactivate HistoryObj
 
-CS -> DB: get_session_messages(session_id, user_id)
-activate DB
-DB --> CS: history context list
-deactivate DB
+CS -> HistoryObj: get_messages_by_session(session_id)
+activate HistoryObj
+HistoryObj --> CS: historyList
+deactivate HistoryObj
 
-CS -> CS: _map_role(history)
+CS -> CS: _map_role(historyList)
 
-CS -> LLM: API Request (history context + prompt)
+CS -> LLM: invoke(historyList)
 activate LLM
-LLM --> CS: Generated Text Response
+LLM --> CS: generatedResponse
 deactivate LLM
 
-CS -> DB: write ChatHistory (response)
-activate DB
-DB --> CS: success
-deactivate DB
+CS -> HistoryObj: save_message(session_id, "ai", generatedResponse)
+activate HistoryObj
+HistoryObj --> CS: success
+deactivate HistoryObj
 
-opt is_first_message
+opt If this is the first message in the session
     CS -> CS: _generate_title(session_id, user_message)
-    activate CS
-    CS -> DB: update Session.title
-    activate DB
-    DB --> CS: success
-    deactivate DB
-    deactivate CS
+    CS -> SessionObj: update_title(new_title)
+    activate SessionObj
+    SessionObj --> CS: success
+    deactivate SessionObj
 end
 
-CS --> API: responseText JSON
+CS --> API: responseJSON
 deactivate CS
 
-API --> UI: message payload JSON
+API --> UI: responseJSON
 deactivate API
 
+UI -> UI: appendMessageToUI(responseJSON)
 UI --> User: Display intelligent chatbot reply
 deactivate UI
 

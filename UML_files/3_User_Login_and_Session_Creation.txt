@@ -1,37 +1,40 @@
 @startuml
-title UniBikes - User Login & Session Creation
+title DublinBikes - User Login & Session Creation
 
-actor "Web User" as User
-participant "React Frontend\n(LoginPage)" as UI
-participant "Flask API\n(UserRoutes)" as API
-participant "UserService" as US
-participant "Database\n(User Model)" as DB
+actor User
+participant "loginPage : LoginPage" as UI
+participant "userRoutes : UserRoutes" as API
+participant "userService : UserService" as US
+participant "userRecord : User" as UserObj
 
-User -> UI: Enter Email & Password
+User -> UI: submitCredentials(email, password)
 activate UI
 
-UI -> API: login(identifier, password) : HTTP POST
+UI -> API: login(email, password)
 activate API
 
-API -> US: login_user(identifier, password)
+API -> US: login_user(email, password)
 activate US
 
-US -> DB: query User by email
-activate DB
-DB --> US: user_record
-deactivate DB
+US -> UserObj: query_by_email(email)
+activate UserObj
+UserObj --> US: User instance
+deactivate UserObj
 
-US -> US: check password_hash matches
-US -> US: create_access_token()
-US -> US: create_refresh_token()
+US -> US: verify_password(password)
+US -> US: create_access_token(user_id, version)
+US -> US: create_refresh_token(user_id, version)
 
-US --> API: auth_tokens (JSON)
+US --> API: auth_tokens
 deactivate US
 
 API --> UI: auth_tokens
 deactivate API
 
-UI --> User: Navigate to App Dashboard
+UI -> UI: storeTokensLocal()
+UI -> UI: navigateToDashboard()
+
+UI --> User: Display Dashboard
 deactivate UI
 
 @enduml

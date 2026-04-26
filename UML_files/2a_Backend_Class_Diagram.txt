@@ -1,0 +1,152 @@
+@startuml
+title DublinBikes - Backend Domain & Services Class Diagram
+left to right direction
+
+package "Domain Entities (Models)" {
+  class Station {
+    -number : Integer
+    -contract_name : String
+    -name : String
+    -address : String
+    -latitude : Float
+    -longitude : Float
+    -banking : Boolean
+    -bonus : Boolean
+    -bike_stands : Integer
+  }
+
+  class Availability {
+    -id : Integer
+    -number : Integer
+    -available_bikes : Integer
+    -available_bike_stands : Integer
+    -status : String
+    -last_update : BigInteger
+    -timestamp : DateTime
+    -requested_at : DateTime
+    +get_recent_history(station_id : Integer) : List<Availability>
+  }
+
+  class WeatherForecast {
+    -id : Integer
+    -forecast_time : DateTime
+    -temperature : Float
+    -weather_code : Integer
+    -description : String
+    -icon : String
+    -feels_like : Float
+    -pressure : Integer
+    -humidity : Integer
+    -uvi : Float
+    -clouds : Integer
+    -visibility : Integer
+    -wind_speed : Float
+    -wind_deg : Integer
+    -pop : Float
+    -fetched_at : DateTime
+    +to_dict() : Map
+    +get_upcoming_forecast() : List<WeatherForecast>
+  }
+
+  class User {
+    -id : Integer
+    -username : String
+    -email : String
+    -password_hash : String
+    -avatar_url : String
+    -is_active : Boolean
+    -email_verification_code : String
+    -email_verification_code_expires_at : DateTime
+    -email_verification_code_sent_at : DateTime
+    -activation_token : String
+    -token_version : Integer
+    -created_at : DateTime
+    -updated_at : DateTime
+    +query_by_email(email : String) : User
+  }
+
+  class Session {
+    -id : String
+    -user_id : Integer
+    -title : String
+    -created_at : DateTime
+    -updated_at : DateTime
+    +find_or_create(session_id : String, user_id : Integer) : Session
+    +update_title(new_title : String) : Boolean
+  }
+
+  class ChatHistory {
+    -id : Integer
+    -session_id : String
+    -message : Map
+    +save_message(session_id : String, role : String, content : String) : Boolean
+    +get_messages_by_session(session_id : String) : List<Map>
+  }
+}
+
+package "Services" {
+  class StationService {
+    +list_stations() : List<Station>
+    +get_recent_station_availability(station_number : Integer, lookback_minutes : Integer) : List<Availability>
+    +get_all_stations_latest_availability() : List<Station>
+  }
+  
+  class UserService {
+    +create_access_token(user_id : Integer, version : Integer) : String
+    +create_refresh_token(user_id : Integer, version : Integer) : String
+    +verify_access_token(token : String) : Map
+    +verify_refresh_token(token : String) : Map
+    +login_user(identifier : String, password : String) : Map
+    +verify_password(password : String) : Boolean
+    +refresh_tokens(refresh_token : String) : Map
+    +logout_user(user_id : Integer) : Boolean
+    +register_user(data : Map) : User
+  }
+
+  class JourneyService {
+    +get_matrix_durations(origins : List<String>, destinations : List<String>, mode : String) : List<Map>
+    +find_best_route(start : String, end : String) : Map
+    +_filter_closest_stations(active_stations : List<Station>) : List<Station>
+    +_calculate_minimal_total_time() : Double
+  }
+
+  class PredictionService {
+    -_model : Object
+    +_load_model() : void
+    +get_station_predictions(station_id : Integer) : List<Map>
+    +_construct_features_array(weather_context : List<WeatherForecast>, availability_history : List<Availability>) : List<Double>
+  }
+
+  class ChatService {
+    +get_chat_history(session_id : String) : List<ChatHistory>
+    +generate_chat_response(session_id : String, user_message : String, user_id : Integer) : String
+    +_ensure_session(session_id : String, user_id : Integer) : Session
+    +_generate_title(session_id : String, message : String) : void
+  }
+
+  class WeatherService {
+    +get_weather() : List<WeatherForecast>
+  }
+}
+
+' Structural Relations (Associations)
+User "1" *-- "0..*" Session : owns
+Session "1" *-- "0..*" ChatHistory : contains
+Station "1" o-- "0..*" Availability : aggregates
+
+' Dependencies
+StationService ..> Station : <<use>>
+StationService ..> Availability : <<use>>
+
+UserService ..> User : <<use>>
+
+ChatService ..> Session : <<use>>
+ChatService ..> ChatHistory : <<use>>
+
+JourneyService ..> StationService : <<use>>
+
+PredictionService ..> WeatherForecast : <<use>>
+PredictionService ..> Availability : <<use>>
+PredictionService ..> Station : <<use>>
+
+@enduml

@@ -1,34 +1,49 @@
 @startuml
 title DublinBikes - Entity Relationship Diagram
 
-entity "station_info" as Station {
-  * station_number : INT <<PK>>
+entity "station" as Station {
+  * number : INT <<PK>>
   --
+  contract_name : VARCHAR(50)
   name : VARCHAR(100)
   address : VARCHAR(200)
-  pos_lat : FLOAT
-  pos_lng : FLOAT
+  latitude : FLOAT
+  longitude : FLOAT
   banking : BOOLEAN
+  bonus : BOOLEAN
+  bike_stands : INT
 }
 
-entity "availability_log" as Availability {
-  * log_id : INT <<PK>>
+entity "availability" as Availability {
+  * id : INT <<PK>>
   --
-  station_number : INT <<FK>>
-  timestamp : DATETIME
+  number : INT <<FK>>
   available_bikes : INT
   available_bike_stands : INT
   status : VARCHAR(20)
+  last_update : BIGINT
+  timestamp : DATETIME
+  requested_at : DATETIME
 }
 
-entity "weather_log" as Weather {
-  * weather_id : INT <<PK>>
+entity "weather_forecast" as Weather {
+  * id : INT <<PK>>
   --
-  timestamp : DATETIME
-  temp : FLOAT
+  forecast_time : DATETIME
+  temperature : FLOAT
+  weather_code : INT
+  description : VARCHAR(100)
+  icon : VARCHAR(20)
+  feels_like : FLOAT
+  pressure : INT
+  humidity : INT
+  uvi : FLOAT
+  clouds : INT
+  visibility : INT
   wind_speed : FLOAT
-  rain : FLOAT
-  description : VARCHAR(50)
+  wind_deg : INT
+  pop : FLOAT
+  fetched_at : DATETIME
 }
 
 entity "user" as User {
@@ -37,9 +52,15 @@ entity "user" as User {
   username : VARCHAR(64) <<UNIQUE>>
   email : VARCHAR(120) <<UNIQUE>>
   password_hash : VARCHAR(256)
+  avatar_url : VARCHAR(255)
   is_active : BOOLEAN
+  email_verification_code : VARCHAR(6)
+  email_verification_code_expires_at : DATETIME
+  email_verification_code_sent_at : DATETIME
+  activation_token : VARCHAR(64) <<UNIQUE>>
   token_version : INT
   created_at : DATETIME
+  updated_at : DATETIME
 }
 
 entity "sessions" as Session {
@@ -54,12 +75,12 @@ entity "sessions" as Session {
 entity "message_store" as ChatHistory {
   * id : INT <<PK>>
   --
-  session_id : VARCHAR(64) <<FK>>
+  session_id : TEXT <<FK>>
   message : JSON
 }
 
-Station ||--o{ Availability : "has many logs"
-User ||--o{ Session : "owns"
-Session ||--o{ ChatHistory : "contains messages"
+Station ||-right-o{ Availability : "has many logs"
+User ||-right-o{ Session : "owns"
+Session ||-right-o{ ChatHistory : "contains messages"
 
 @enduml

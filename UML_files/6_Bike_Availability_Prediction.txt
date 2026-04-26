@@ -1,18 +1,19 @@
 @startuml
 title DublinBikes - Bike Availability Prediction Pipeline
 
-actor "Web User" as User
-participant "React Frontend\n(SearchMapsPage)" as UI
-participant "Flask API\n(StationRoutes)" as API
-participant "PredictionService" as PS
-participant "WeatherService" as WS
-participant "Database\n(WeatherForecast/Station)" as DB
-participant "Scikit-Learn\n(RandomForestRegressor)" as ML
+actor User
+participant "mapsPage : SearchMapsPage" as UI
+participant "stationRoutes : StationRoutes" as API
+participant "predictionService : PredictionService" as PS
+participant "weatherService : WeatherService" as WS
+participant "weatherRecord : WeatherForecast" as WeatherObj
+participant "availabilityRecord : Availability" as AvailObj
+participant "rfModel : RandomForestRegressor" as ML
 
-User -> UI: Clicks station to see chart
+User -> UI: clickStationMarker(station_id)
 activate UI
 
-UI -> API: get_station_prediction(number)
+UI -> API: get_station_prediction(station_id)
 activate API
 
 API -> PS: get_station_predictions(station_id)
@@ -21,28 +22,36 @@ activate PS
 ' Needs Weather
 PS -> WS: get_weather()
 activate WS
-WS -> DB: query WeatherForecast
-activate DB
-DB --> WS: weather forecast records
-deactivate DB
-WS --> PS: weather context dictionary
+WS -> WeatherObj: get_upcoming_forecast()
+activate WeatherObj
+WeatherObj --> WS: List<WeatherForecast>
+deactivate WeatherObj
+WS --> PS: weather_context
 deactivate WS
 
 ' Construct Features
-PS -> PS: gather historical timeline features
+PS -> AvailObj: get_recent_history(station_id)
+activate AvailObj
+AvailObj --> PS: List<Availability>
+deactivate AvailObj
+
+PS -> PS: _construct_features_array(weather_context, availability_history)
 
 PS -> ML: predict(features_array)
 activate ML
-ML --> PS: numeric array (predicted_bikes, predicted_stands)
+ML --> PS: predictions_array (bikes, stands)
 deactivate ML
 
-PS --> API: List<Dict> (timestamps + predictions)
+PS --> API: predictions_list
 deactivate PS
 
-API --> UI: prediction array JSON
+API --> UI: predictions_json
 deactivate API
 
-UI --> User: Render Data Chart component
+UI -> UI: parsePredictionData(predictions_json)
+UI -> UI: renderDataChart()
+
+UI --> User: Display Chart on Map
 deactivate UI
 
 @enduml

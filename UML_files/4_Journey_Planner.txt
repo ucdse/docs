@@ -1,49 +1,54 @@
 @startuml
 title DublinBikes - Plan Journey with ETA
 
-actor "Web User" as User
-participant "React Frontend\n(SearchMapsPage)" as UI
-participant "Flask API\n(JourneyRoutes)" as API
-participant "JourneyService" as JS
-participant "Database\n(Station/Availability)" as DB
-participant "GoogleMaps API" as Gmaps
+actor User
+participant "mapsPage : SearchMapsPage" as UI
+participant "journeyRoutes : JourneyRoutes" as API
+participant "journeyService : JourneyService" as JS
+participant "stationService : StationService" as SS
+participant "gmapsClient : GoogleMapsAPI" as Gmaps
 
-User -> UI: Input Start/End Address
+User -> UI: submitAddresses(start, end)
 activate UI
 
-UI -> API: plan_journey(start_lat, start_lon, end_lat, end_lon)
+UI -> API: plan_journey(start, end)
 activate API
 
-API -> JS: find_best_route(start_lat, start_lon, end_lat, end_lon)
+API -> JS: find_best_route(start, end)
 activate JS
 
-JS -> DB: fetch latest Station & Availability
-activate DB
-DB --> JS: active stations list
-deactivate DB
+JS -> SS: get_all_stations_latest_availability()
+activate SS
+SS --> JS: active_stations (List<Station>)
+deactivate SS
 
-' Calculate Matrix
-JS -> JS: filter closest operative stations
+' Internal calculation
+JS -> JS: _filter_closest_stations(active_stations)
 
-JS -> Gmaps: get_matrix_durations(origins, destinations, mode="walking")
+JS -> Gmaps: get_matrix_durations(origins, destinations, "walking")
 activate Gmaps
-Gmaps --> JS: walking_durations list
+Gmaps --> JS: walking_durations
 deactivate Gmaps
 
-JS -> Gmaps: get_matrix_durations(starts, ends, mode="bicycling")
+JS -> Gmaps: get_matrix_durations(starts, ends, "bicycling")
 activate Gmaps
-Gmaps --> JS: cycling_durations list
+Gmaps --> JS: cycling_durations
 deactivate Gmaps
 
-JS -> JS: calculate minimal total_time (Walk + Cycle)
+' Self-Message for internal logic
+JS -> JS: _calculate_minimal_total_time()
 
-JS --> API: best_route (dictionary)
+JS --> API: best_route
 deactivate JS
 
-API --> UI: best_route JSON
+API --> UI: best_route
 deactivate API
 
-UI --> User: Render unified Route Polylines
+' UI Self-Messages
+UI -> UI: parseRouteData(best_route)
+UI -> UI: renderRoutePolylines()
+
+UI --> User: Display Route on Map
 deactivate UI
 
 @enduml
