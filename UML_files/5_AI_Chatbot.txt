@@ -2,60 +2,46 @@
 title DublinBikes - AI Chatbot Interaction Flow
 
 actor User
-participant "chatPage : ChatPage" as UI
+participant "chatPage : Chat" as UI
 participant "chatRoutes : ChatRoutes" as API
 participant "chatService : ChatService" as CS
-participant "sessionRecord : Session" as SessionObj
-participant "historyRecord : ChatHistory" as HistoryObj
+participant "database : SQLAlchemy ORM" as DB
 participant "llmClient : LangChainLLM" as LLM
 
 User -> UI: submitMessage(user_message)
 activate UI
 
-UI -> API: chat(session_id, user_message)
+UI -> API: chat(session_id, user_message) [Header: Authorization Bearer Token]
 activate API
 
-API -> API: _require_auth()
+API -> API: _require_auth() (Validates JWT)
 
 API -> CS: generate_chat_response(session_id, user_message, user_id)
 activate CS
 
 CS -> CS: _ensure_session(session_id, user_id)
 activate CS
-CS -> SessionObj: find_or_create(session_id, user_id)
-activate SessionObj
-SessionObj --> CS: sessionRecord
-deactivate SessionObj
+CS -> DB: db.session.get() / add()
+activate DB
+DB --> CS: sessionRecord
+deactivate DB
 deactivate CS
 
-CS -> HistoryObj: save_message(session_id, "user", user_message)
-activate HistoryObj
-HistoryObj --> CS: success
-deactivate HistoryObj
-
-CS -> HistoryObj: get_messages_by_session(session_id)
-activate HistoryObj
-HistoryObj --> CS: historyList
-deactivate HistoryObj
-
-CS -> CS: _map_role(historyList)
-
-CS -> LLM: invoke(historyList)
+CS -> LLM: invoke(user_message) via RunnableWithMessageHistory
 activate LLM
+LLM -> DB: SQLChatMessageHistory: save user msg & load context
+activate DB
+DB --> LLM: chat context
+deactivate DB
 LLM --> CS: generatedResponse
 deactivate LLM
 
-CS -> HistoryObj: save_message(session_id, "ai", generatedResponse)
-activate HistoryObj
-HistoryObj --> CS: success
-deactivate HistoryObj
-
 opt If this is the first message in the session
     CS -> CS: _generate_title(session_id, user_message)
-    CS -> SessionObj: update_title(new_title)
-    activate SessionObj
-    SessionObj --> CS: success
-    deactivate SessionObj
+    CS -> DB: db.session.commit() (update Session title)
+    activate DB
+    DB --> CS: success
+    deactivate DB
 end
 
 CS --> API: responseJSON
@@ -64,7 +50,7 @@ deactivate CS
 API --> UI: responseJSON
 deactivate API
 
-UI -> UI: appendMessageToUI(responseJSON)
+UI -> UI: setMessages(prev => [...prev, responseJSON])
 UI --> User: Display intelligent chatbot reply
 deactivate UI
 

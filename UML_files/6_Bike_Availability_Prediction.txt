@@ -2,12 +2,11 @@
 title DublinBikes - Bike Availability Prediction Pipeline
 
 actor User
-participant "mapsPage : SearchMapsPage" as UI
+participant "mapsPage : Maps" as UI
 participant "stationRoutes : StationRoutes" as API
 participant "predictionService : PredictionService" as PS
-participant "weatherService : WeatherService" as WS
 participant "weatherRecord : WeatherForecast" as WeatherObj
-participant "availabilityRecord : Availability" as AvailObj
+participant "stationRecord : Station" as StationObj
 participant "rfModel : RandomForestRegressor" as ML
 
 User -> UI: clickStationMarker(station_id)
@@ -19,27 +18,22 @@ activate API
 API -> PS: get_station_predictions(station_id)
 activate PS
 
-' Needs Weather
-PS -> WS: get_weather()
-activate WS
-WS -> WeatherObj: get_upcoming_forecast()
+PS -> StationObj: query_by_id(station_id)
+activate StationObj
+StationObj --> PS: station details (capacity, lat, lon)
+deactivate StationObj
+
+PS -> WeatherObj: query_future_forecasts(now)
 activate WeatherObj
-WeatherObj --> WS: List<WeatherForecast>
+WeatherObj --> PS: List<WeatherForecast>
 deactivate WeatherObj
-WS --> PS: weather_context
-deactivate WS
 
 ' Construct Features
-PS -> AvailObj: get_recent_history(station_id)
-activate AvailObj
-AvailObj --> PS: List<Availability>
-deactivate AvailObj
+PS -> PS: format Pandas DataFrame features (time, weather, station)
 
-PS -> PS: _construct_features_array(weather_context, availability_history)
-
-PS -> ML: predict(features_array)
+PS -> ML: predict(df_input)
 activate ML
-ML --> PS: predictions_array (bikes, stands)
+ML --> PS: predictions_array (bikes)
 deactivate ML
 
 PS --> API: predictions_list
@@ -48,10 +42,10 @@ deactivate PS
 API --> UI: predictions_json
 deactivate API
 
-UI -> UI: parsePredictionData(predictions_json)
-UI -> UI: renderDataChart()
+' React Declarative State Update
+UI -> UI: setPredictionData(predictions_json)
 
-UI --> User: Display Chart on Map
+UI --> User: Auto-render Chart Modal
 deactivate UI
 
 @enduml

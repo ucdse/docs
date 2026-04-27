@@ -24,7 +24,6 @@ package "Domain Entities (Models)" {
     -last_update : BigInteger
     -timestamp : DateTime
     -requested_at : DateTime
-    +get_recent_history(station_id : Integer) : List<Availability>
   }
 
   class WeatherForecast {
@@ -45,7 +44,6 @@ package "Domain Entities (Models)" {
     -pop : Float
     -fetched_at : DateTime
     +to_dict() : Map
-    +get_upcoming_forecast() : List<WeatherForecast>
   }
 
   class User {
@@ -62,7 +60,6 @@ package "Domain Entities (Models)" {
     -token_version : Integer
     -created_at : DateTime
     -updated_at : DateTime
-    +query_by_email(email : String) : User
   }
 
   class Session {
@@ -71,60 +68,63 @@ package "Domain Entities (Models)" {
     -title : String
     -created_at : DateTime
     -updated_at : DateTime
-    +find_or_create(session_id : String, user_id : Integer) : Session
-    +update_title(new_title : String) : Boolean
   }
 
   class ChatHistory {
     -id : Integer
     -session_id : String
     -message : Map
-    +save_message(session_id : String, role : String, content : String) : Boolean
-    +get_messages_by_session(session_id : String) : List<Map>
+  }
+}
+
+package "Utilities" {
+  class calculateDistance <<utility>> {
+    +calculate_distance(lat1 : Double, lon1 : Double, lat2 : Double, lon2 : Double) : Double
   }
 }
 
 package "Services" {
-  class StationService {
+  class StationService <<module>> {
     +list_stations() : List<Station>
     +get_recent_station_availability(station_number : Integer, lookback_minutes : Integer) : List<Availability>
     +get_all_stations_latest_availability() : List<Station>
   }
   
-  class UserService {
+  class UserService <<module>> {
     +create_access_token(user_id : Integer, version : Integer) : String
     +create_refresh_token(user_id : Integer, version : Integer) : String
     +verify_access_token(token : String) : Map
     +verify_refresh_token(token : String) : Map
     +login_user(identifier : String, password : String) : Map
-    +verify_password(password : String) : Boolean
     +refresh_tokens(refresh_token : String) : Map
-    +logout_user(user_id : Integer) : Boolean
-    +register_user(data : Map) : User
+    +logout_user(access_token : String) : void
+    +register_user(data : Map) : Map
+    +send_verification_code(identifier : String) : Map
+    +activate_user(identifier : String, code : String) : Map
+    +activate_by_token(token : String) : Map
   }
 
-  class JourneyService {
+  class JourneyService <<module>> {
     +get_matrix_durations(origins : List<String>, destinations : List<String>, mode : String) : List<Map>
     +find_best_route(start : String, end : String) : Map
-    +_filter_closest_stations(active_stations : List<Station>) : List<Station>
-    +_calculate_minimal_total_time() : Double
   }
 
-  class PredictionService {
+  class PredictionService <<module>> {
     -_model : Object
     +_load_model() : void
     +get_station_predictions(station_id : Integer) : List<Map>
-    +_construct_features_array(weather_context : List<WeatherForecast>, availability_history : List<Availability>) : List<Double>
   }
 
-  class ChatService {
-    +get_chat_history(session_id : String) : List<ChatHistory>
+  class ChatService <<module>> {
+    +get_chat_history(session_id : String) : Object
+    +get_session_messages(session_id : String, user_id : Integer) : List<Map>
     +generate_chat_response(session_id : String, user_message : String, user_id : Integer) : String
+    +generate_chat_stream(session_id : String, user_message : String, user_id : Integer) : Generator
     +_ensure_session(session_id : String, user_id : Integer) : Session
     +_generate_title(session_id : String, message : String) : void
   }
 
-  class WeatherService {
+  class WeatherService <<module>> {
     +get_weather() : List<WeatherForecast>
   }
 }
@@ -144,6 +144,7 @@ ChatService ..> Session : <<use>>
 ChatService ..> ChatHistory : <<use>>
 
 JourneyService ..> StationService : <<use>>
+JourneyService ..> calculateDistance : <<use>>
 
 PredictionService ..> WeatherForecast : <<use>>
 PredictionService ..> Availability : <<use>>

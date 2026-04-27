@@ -2,26 +2,30 @@
 title DublinBikes - User Login & Session Creation
 
 actor User
-participant "loginPage : LoginPage" as UI
+participant "loginPage : Login" as UI
 participant "userRoutes : UserRoutes" as API
 participant "userService : UserService" as US
-participant "userRecord : User" as UserObj
+participant "werkzeug.security" as WZ
+participant "database : SQLAlchemy ORM" as DB
 
-User -> UI: submitCredentials(email, password)
+User -> UI: click SignIn (trigger handleSubmit)
 activate UI
 
-UI -> API: login(email, password)
+UI -> API: userLoginAPI({identifier, password})
 activate API
 
 API -> US: login_user(email, password)
 activate US
 
-US -> UserObj: query_by_email(email)
-activate UserObj
-UserObj --> US: User instance
-deactivate UserObj
+US -> DB: query User by identifier
+activate DB
+DB --> US: User instance
+deactivate DB
 
-US -> US: verify_password(password)
+US -> WZ: check_password_hash(password_hash, password)
+activate WZ
+WZ --> US: is_valid (Boolean)
+deactivate WZ
 US -> US: create_access_token(user_id, version)
 US -> US: create_refresh_token(user_id, version)
 
@@ -31,10 +35,44 @@ deactivate US
 API --> UI: auth_tokens
 deactivate API
 
-UI -> UI: storeTokensLocal()
-UI -> UI: navigateToDashboard()
+UI -> UI: setAuthTokens(vo)
+UI -> UI: navigate('/profile')
 
 UI --> User: Display Dashboard
+deactivate UI
+
+' =====================================
+' TOKEN REFRESH FLOW (On Expiration)
+' =====================================
+... time passes ...
+
+User -> UI: Trigger Protected Action
+activate UI
+
+UI -> API: protectedapi_call() [Header: Authorization Bearer AccessToken]
+activate API
+API --> UI: 401 Unauthorized (Token Expired)
+deactivate API
+
+UI -> API: POST /api/users/refresh [Body: {refresh_token}]
+activate API
+API -> US: refresh_tokens(refresh_token)
+activate US
+US -> US: verify_refresh_token(refresh_token)
+US -> US: create_access_token(user_id, version)
+US --> API: new_auth_tokens
+deactivate US
+
+API --> UI: new_auth_tokens
+deactivate API
+
+UI -> UI: updateTokensLocal()
+UI -> API: retry_protected_api_call() [Header: Authorization Bearer NewAccessToken]
+activate API
+API --> UI: 200 OK Response
+deactivate API
+
+UI --> User: Action Succeeded
 deactivate UI
 
 @enduml
