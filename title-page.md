@@ -15,9 +15,9 @@ lang: en
 
 | Author | % | Type of contribution |
 |---|---|---|
-| **Kaiwen Yao** | 33.33 | Code (`flask-app`: JWT auth, AI chat SSE, DB schema/migrations, stations/weather/prediction APIs); Report (Process, Architecture & Design); Management (CI/Jenkins, Docker). |
-| **Tzuyu Chang** | 33.33 | Code (`react-app`: map UI, journey planner, chat UI, Tailwind styling); Report (Overview, Requirements, mockups, user stories); Management (sprint reviews/retros). |
-| **Ziling Huang** | 33.33 | Code (`scraper`: JCDecaux & OpenWeather ingest; ML pipeline `ml.ipynb`, training, model export); Report (Machine Learning, Testing); Management (product backlog, data/model QA). |
+| **Kaiwen Yao** | 33.33 | Code (`scraper`: standalone data collection, JCDecaux & weather ingest, Docker, Jenkins CI/CD; `flask-app`: app factory, JWT auth, station/prediction/chat APIs, DB migrations; `machine_learning`: EDA, model training, Hugging Face); Report (Process, Architecture & Design); Management (CI/CD, Docker, Scrum Master Sprint 3). |
+| **Tzuyu Chang** | 33.33 | Code (`react-app`: architecture, routing, Tailwind, layout, maps, home, auth, profile; `flask-app`: real-time station status API); Report (Overview, Requirements, mockups, user stories); Management (User Research, Scrum Master Sprint 1 & 4). |
+| **Ziling Huang** | 33.33 | Code (`flask-app`: weather API, journey/route planning API; `react-app`: weather component, chat page, journey planning UI); Report (Machine Learning, Testing); Management (AWS RDS, UI/UX Design, Scrum Master Sprint 2). |
 
 **Screen Recording (6–8 min max).** URL: *TODO — paste final video URL.* 3–5 min: feature walkthrough with voice, browser URL bar clearly showing the **EC2 address**. ~3 min: each member presents **1 min** on their contributions (Kaiwen → Tzuyu → Ziling).
 
