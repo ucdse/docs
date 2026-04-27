@@ -3,6 +3,10 @@ mainfont: "Times New Roman"
 fontsize: 11pt
 geometry: margin=0.9in
 lang: en
+header-includes: |
+  \usepackage{tabularx}
+  \usepackage{array}
+  \usepackage{booktabs}
 ---
 
 \begin{center}
@@ -11,23 +15,48 @@ lang: en
 {\normalsize Kaiwen Yao \quad$\bullet$\quad Tzuyu Chang \quad$\bullet$\quad Ziling Huang \qquad April 2026}
 \end{center}
 
-**Authors and Contributions** — each author contributed an agreed equal share of **33.33%**.
+\noindent\textbf{Authors and Contributions} — each author contributed an agreed equal share of \textbf{33.33\%}.
 
-| Author | % | Type of contribution |
-|---|---|---|
-| **Kaiwen Yao** | 33.33 | Code (`scraper`: standalone data collection, JCDecaux & weather ingest, Docker, Jenkins CI/CD; `flask-app`: app factory, JWT auth, station/prediction/chat APIs, DB migrations; `machine_learning`: EDA, model training, Hugging Face); Report (Process, Architecture & Design); Management (CI/CD, Docker, Scrum Master Sprint 3). |
-| **Tzuyu Chang** | 33.33 | Code (`react-app`: architecture, routing, Tailwind, layout, maps, home, auth, profile; `flask-app`: real-time station status API); Report (Overview, Requirements, mockups, user stories); Management (User Research, Scrum Master Sprint 1 & 4). |
-| **Ziling Huang** | 33.33 | Code (`flask-app`: weather API, journey/route planning API; `react-app`: weather component, chat page, journey planning UI); Report (Machine Learning, Testing); Management (AWS RDS, UI/UX Design, Scrum Master Sprint 2). |
+\vspace{0.5em}
 
-**Screen Recording (6–8 min max).** URL: *TODO — paste final video URL.* 3–5 min: feature walkthrough with voice, browser URL bar clearly showing the **EC2 address**. ~3 min: each member presents **1 min** on their contributions (Kaiwen → Tzuyu → Ziling).
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Author} & \textbf{\%} & \textbf{Type of contribution} \\
+\hline
+Kaiwen Yao & 33.33 & 
+\textbf{Code} (\texttt{scraper}: standalone data collection service, \texttt{main\_scraper.py} periodic loop with retry logic, \texttt{fetch\_stations.py} JCDecaux API ingest, \texttt{fetch\_weather.py} weather ingest, SQLAlchemy ORM models, Docker containerisation, Jenkins CI/CD pipeline for image build and EC2 deployment; \texttt{flask-app}: application factory pattern, environment-based config with strict validation, Flask-Migrate for schema management, JWT-based authentication API with registration/login/logout/access–refresh token rotation and email verification flow, Pydantic request/response contracts, Station API (list all stations, 24 h availability history, latest snapshot, bike-availability prediction endpoint), AI Chat API integrating Alibaba Cloud Qwen LLM via LangChain with dual response modes—standard JSON and real-time SSE streaming—and persistent session management secured by JWT middleware; \texttt{machine\_learning}: full ML pipeline (EDA, feature engineering, correlation analysis), trained and compared Linear Regression, Decision Tree, Random Forest, and Gradient Boosting models, selected Random Forest as best performer, exported model and feature artefacts, published to Hugging Face (\texttt{ucdse/bike\_availability\_model}) with Jenkins pipeline pulling model at build time; Testing: built pytest infrastructure with SQLite in-memory isolation and shared fixtures, wrote unit and integration tests for user auth, station API, prediction service, AI chat, contracts, schemas, and utilities); 
+\textbf{Report} (Machine Learning Model, Process); 
+\textbf{Management} (CI/CD, Docker, Scrum Master Sprint 3). \\
+\hline
+Tzuyu Chang & 33.33 & 
+\textbf{Code} (\texttt{react-app}: bootstrapped React + TypeScript + Vite project, configured routing with \texttt{react-router-dom}, Tailwind CSS, ESLint, and TypeScript config; \texttt{Layout.tsx} top-level layout wrapper, \texttt{Header.tsx} site-wide navigation bar, \texttt{Footer.tsx} site-wide footer; \texttt{Home.tsx} landing page with project introduction and quick navigation; Maps page integrating Google Maps JavaScript API for interactive bike-station map with real-time station markers, availability badges, and station detail panel showing current and historical availability; Authentication pages—\texttt{Register.tsx} registration form with client-side validation, \texttt{Login.tsx} login form with JWT token storage, \texttt{VerifyEmail.tsx} prompt page after registration, \texttt{Activate.tsx} email token activation handler; Profile page displaying user info from \texttt{/api/users/me}, supporting profile update and logout; \texttt{flask-app}: designed and implemented \texttt{GET /api/stations/status} real-time station status endpoint using an efficient SQLAlchemy subquery with \texttt{func.max()} grouped by station number to retrieve only the most recent record per station, avoiding full-table scans); 
+\textbf{Report} (Overview, Requirements, Testing); 
+\textbf{Management} (User Research—designed and conducted user persona interviews, authored full interview script covering commuting habits, pain points, and feature expectations, synthesised findings into user personas; Scrum Master Sprint 1 \& 4). \\
+\hline
+Ziling Huang & 33.33 & 
+\textbf{Code} (UI/UX Design: high-fidelity Figma mockups for Home, Maps, Chat, Profile, and authentication flows, defined visual language—colour palette, typography, component hierarchy, responsive layout grid—and produced annotated wireframes as blueprint for frontend implementation; \texttt{flask-app}: provisioned and configured Amazon RDS MySQL instance including security group rules, subnet configuration, connection parameter tuning, and environment-variable credential management, validated schema compatibility between Flask-Migrate migrations and RDS; Weather API—\texttt{GET /api/weather} fetching hourly and daily forecast from OpenWeatherMap One Call API, Pydantic \texttt{WeatherQueryDTO}/\texttt{WeatherDataVO} for strict request validation and response serialisation, error handling for invalid coordinates and API failures; Journey/Route Planning API—\texttt{POST /api/journey/plan} accepting text addresses or coordinates, Google Maps Geocoding integration, server-side optimal route calculation (nearest available source station → nearest free-dock destination station), \texttt{api\_retry} decorator for resilient Google Maps API calls; \texttt{react-app}: reusable Weather Component consuming \texttt{/api/weather} displaying current conditions, hourly and daily forecast across Maps and Home pages; Chat Page with full chat UI, message history, typing indicators, SSE streaming display, and session persistence across page reloads connected to \texttt{/api/chat} and \texttt{/api/chat/stream}; Journey Planning UI within Maps page with journey search form, rendering recommended pick-up and drop-off stations on the map, and displaying estimated route duration; Testing: wrote unit and integration tests for weather and journey APIs with mocked Google Maps API); 
+\textbf{Report} (Architecture and Design); 
+\textbf{Management} (AWS RDS, UI/UX Design, Scrum Master Sprint 2). \\
+\hline
+\end{tabularx}
 
-**GitHub Project.**
-Docs/report: <https://github.com/ucdse/docs> · Backend: <https://github.com/ucdse/flask-app> · Frontend: <https://github.com/ucdse/react-app> · Scraper: <https://github.com/ucdse/scraper>
+\vspace{1em}
 
-**Product & Sprint Backlogs.**
-Product backlog: *TODO — URL.* Sprint 1: *TODO.* Sprint 2: *TODO.* Sprint 3: *TODO.* Sprint 4: *TODO.*
+\noindent\textbf{Screen Recording (6–8 min max).} URL: \textit{TODO — paste final video URL.} 3–5 min: feature walkthrough with voice, browser URL bar clearly showing the \textbf{EC2 address}. $\sim$3 min: each member presents \textbf{1 min} on their contributions (Kaiwen $\rightarrow$ Tzuyu $\rightarrow$ Ziling).
 
-**Generative AI Chats (one per student, in the `docs` repo).**
-[KaiwenYao_Generative_AI_chats.md](https://github.com/ucdse/docs/blob/main/KaiwenYao_Generative_AI_chats.md) ·
-[TzuyuChang_Generative_AI_chats.md](https://github.com/ucdse/docs/blob/main/TzuyuChang_Generative_AI_chats.md) ·
-[ZilingHuang_Generative_AI_chats.md](https://github.com/ucdse/docs/blob/main/ZilingHuang_Generative_AI_chats.md)
+\vspace{0.5em}
+
+\noindent\textbf{GitHub Project.}\\
+Docs/report: \url{https://github.com/ucdse/docs} $\cdot$ Backend: \url{https://github.com/ucdse/flask-app} $\cdot$ Frontend: \url{https://github.com/ucdse/react-app} $\cdot$ Scraper: \url{https://github.com/ucdse/scraper}
+
+\vspace{0.5em}
+
+\noindent\textbf{Product \& Sprint Backlogs.}\\
+Product backlog: \textit{TODO — URL.} Sprint 1: \textit{TODO.} Sprint 2: \textit{TODO.} Sprint 3: \textit{TODO.} Sprint 4: \textit{TODO.}
+
+\vspace{0.5em}
+
+\noindent\textbf{Generative AI Chats (one per student, in the \texttt{docs} repo.)}\\
+\href{https://github.com/ucdse/docs/blob/main/KaiwenYao_Generative_AI_chats.md}{KaiwenYao\_Generative\_AI\_chats.md} $\cdot$
+\href{https://github.com/ucdse/docs/blob/main/TzuyuChang_Generative_AI_chats.md}{TzuyuChang\_Generative\_AI\_chats.md} $\cdot$
+\href{https://github.com/ucdse/docs/blob/main/ZilingHuang_Generative_AI_chats.md}{ZilingHuang\_Generative\_AI\_chats.md}
