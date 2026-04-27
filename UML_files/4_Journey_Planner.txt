@@ -2,9 +2,10 @@
 title DublinBikes - Plan Journey with ETA
 
 actor User
-participant "mapsPage : SearchMapsPage" as UI
+participant "mapsPage : Maps" as UI
 participant "journeyRoutes : JourneyRoutes" as API
 participant "journeyService : JourneyService" as JS
+participant "utils : calculateDistance" as Util
 participant "stationService : StationService" as SS
 participant "gmapsClient : GoogleMapsAPI" as Gmaps
 
@@ -23,7 +24,11 @@ SS --> JS: active_stations (List<Station>)
 deactivate SS
 
 ' Internal calculation
-JS -> JS: _filter_closest_stations(active_stations)
+JS -> Util: calculate_distance(lat1, lon1, lat2, lon2)
+activate Util
+Util --> JS: distance
+deactivate Util
+JS -> JS: sort 10 closest by distance
 
 JS -> Gmaps: get_matrix_durations(origins, destinations, "walking")
 activate Gmaps
@@ -36,7 +41,7 @@ Gmaps --> JS: cycling_durations
 deactivate Gmaps
 
 ' Self-Message for internal logic
-JS -> JS: _calculate_minimal_total_time()
+JS -> JS: loop 25 combinations to find minimum time
 
 JS --> API: best_route
 deactivate JS
@@ -44,11 +49,10 @@ deactivate JS
 API --> UI: best_route
 deactivate API
 
-' UI Self-Messages
-UI -> UI: parseRouteData(best_route)
-UI -> UI: renderRoutePolylines()
+' React Declarative State Update
+UI -> UI: setJourneyResult(journeyPlanResponse)
 
-UI --> User: Display Route on Map
+UI --> User: Auto-render Polylines on Map
 deactivate UI
 
 @enduml

@@ -1,65 +1,64 @@
 @startuml
-title DublinBikes - Frontend UI Components Class Diagram
+title DublinBikes - Frontend React Components Diagram
 
 package "React Frontend Subsystem (Pages)" {
-  class LoginPage <<UI>> {
-    -emailInput : String
-    -passwordInput : String
-    +submitCredentials(email : String, password : String) : void
-    +storeTokensLocal(tokens : Map) : void
-    +navigateToDashboard() : void
+  class Login <<FC>> {
+    -identifier : String [State]
+    -password : String [State]
+    -loading : Boolean [State]
+    +handleSubmit(e : Event) : Promise<void>
   }
 
-  class RegisterPage <<UI>> {
-    -usernameInput : String
-    -emailInput : String
-    -passwordInput : String
-    +submitRegistration() : void
+  class Register <<FC>> {
+    -username : String [State]
+    -email : String [State]
+    -password : String [State]
+    -loading : Boolean [State]
+    +handleSubmit(e : Event) : Promise<void>
   }
 
-  class VerifyEmailPage <<UI>> {
-    -verificationCode : String
-    +submitVerification() : void
+  class VerifyEmail <<FC>> {
+    -verificationCode : String [State]
+    -loading : Boolean [State]
+    +handleSubmit(e : Event) : Promise<void>
   }
 
-  class ProfilePage <<UI>> {
-    -userProfile : Map
-    +fetchProfileData() : void
-    +logout() : void
+  class Profile <<FC>> {
+    -userProfile : Map [State]
+    -loading : Boolean [State]
+    +handleLogout() : void
   }
 
-  class SearchMapsPage <<UI>> {
-    -startAddress : String
-    -endAddress : String
-    -mapInstance : Object
-    +submitAddresses(start : String, end : String) : void
-    +parseRouteData(bestRoute : Map) : void
-    +renderRoutePolylines() : void
-    +clickStationMarker(stationId : Integer) : void
-    +parsePredictionData(predictionsJson : List<Map>) : void
-    +renderDataChart() : void
+  class Maps <<FC>> {
+    -mapInstance : Object [State]
+    -stations : List [State]
+    -selectedStation : Map [State]
+    -journeyResult : Map [State]
+    -stationPredictions : List [State]
+    +handleMapLoad(map : Object) : void
+    +handleStationClick(station : Map) : void
+    +handlePlanJourney(start : String, end : String) : Promise<void>
   }
 
-  class ChatPage <<UI>> {
-    -chatHistory : List<Map>
-    -currentMessage : String
-    +submitMessage(userMessage : String) : void
-    +appendMessageToUI(responseJson : Map) : void
+  class Chat <<FC>> {
+    -messages : List<Map> [State]
+    -inputValue : String [State]
+    -isLoading : Boolean [State]
+    +handleSendMessage(e : Event) : Promise<void>
   }
 
-  class HomePage <<UI>> {
-    -weatherInfo : Map
-    -systemStatus : Map
-    +fetchDashboardData() : void
+  class Home <<FC>> {
+    -weatherData : Map [State]
+    -systemStats : Map [State]
   }
 }
 
 ' Navigation/Dependencies
-LoginPage ..> HomePage : <<navigate>>
-LoginPage ..> RegisterPage : <<navigate>>
-RegisterPage ..> VerifyEmailPage : <<navigate>>
-HomePage ..> SearchMapsPage : <<navigate>>
-HomePage ..> ChatPage : <<navigate>>
-HomePage ..> ProfilePage : <<navigate>>
+Login ..> Profile : <<navigate>>
+Login ..> Register : <<navigate>>
+Register ..> VerifyEmail : <<navigate>>
+Home ..> Maps : <<navigate>>
+Home ..> Chat : <<navigate>>
+Home ..> Profile : <<navigate>>
 
 @enduml
