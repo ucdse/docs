@@ -7,7 +7,7 @@ participant "stationRoutes : StationRoutes" as API
 participant "predictionService : PredictionService" as PS
 participant "weatherRecord : WeatherForecast" as WeatherObj
 participant "stationRecord : Station" as StationObj
-participant "rfModel : RandomForestRegressor" as ML
+participant "dtModel : DecisionTreeRegressor" as ML
 
 User -> UI: clickStationMarker(station_id)
 activate UI
