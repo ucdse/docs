@@ -9,6 +9,7 @@ participant "weatherRecord : WeatherForecast" as WeatherObj
 participant "stationRecord : Station" as StationObj
 participant "dtModel : DecisionTreeRegressor" as ML
 
+
 User -> UI: clickStationMarker(station_id)
 activate UI
 
