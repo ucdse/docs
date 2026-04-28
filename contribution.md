@@ -38,7 +38,7 @@
 ### Machine Learning & Prediction Service (`machine_learning/`, `app/services/prediction_service.py`)
 - Conducted full ML pipeline in `ml.ipynb`: EDA, feature engineering, correlation analysis
 - Trained and compared Linear Regression, Decision Tree, Random Forest, and Gradient Boosting models
-- Selected Random Forest as best-performing model; exported `bike_availability_model.pkl` and `model_features.pkl`
+- Selected Decision Tree as best-performing model; exported `bike_availability_model.pkl` and `model_features.pkl`
 - Published model to Hugging Face (`ucdse/bike_availability_model`); Jenkins pipeline pulls model at build time
 - Implemented `prediction_service.py` to load and serve predictions at runtime
 
