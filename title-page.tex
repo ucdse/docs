@@ -1,0 +1,75 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+
+\begin{document}
+
+\begin{center}
+{\Large\textbf{Dublin Bikes --- Project Report}}\\[0.3em]
+{\normalsize UCD School of Computer Science --- Software Engineering Project}\\[0.3em]
+{\normalsize Kaiwen Yao \quad$\bullet$\quad Tzuyu Chang \quad$\bullet$\quad Ziling Huang \qquad April 2026}
+\end{center}
+
+\noindent\textbf{Authors and Contributions} --- each author contributed an agreed equal share of \textbf{33.33\%}.
+
+\vspace{0.5em}
+
+\small
+\begin{longtable}{@{}p{2.2cm}p{1cm}p{11.5cm}@{}}
+\toprule
+\textbf{Author} & \textbf{\%} & \textbf{Type of contribution} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Author} & \textbf{\%} & \textbf{Type of contribution} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Kaiwen Yao & 33.33 & 
+\textbf{Code} (\texttt{scraper}: standalone data collection service, \texttt{main\_scraper.py} periodic loop with retry logic, \texttt{fetch\_stations.py} JCDecaux API ingest, \texttt{fetch\_weather.py} weather ingest, SQLAlchemy ORM models, Docker containerisation, Jenkins CI/CD pipeline for image build and EC2 deployment; \texttt{flask-app}: application factory pattern, environment-based config with strict validation, Flask-Migrate for schema management, JWT-based authentication API with registration/login/logout/access--refresh token rotation and email verification flow, Pydantic request/response contracts, Station API (list all stations, 24~h availability history, latest snapshot, bike-availability prediction endpoint), AI Chat API integrating Alibaba Cloud Qwen LLM via LangChain with dual response modes---standard JSON and real-time SSE streaming---and persistent session management secured by JWT middleware; \texttt{machine\_learning}: full ML pipeline (EDA, feature engineering, correlation analysis), trained and compared Linear Regression, Decision Tree, Random Forest, and Gradient Boosting models, selected Random Forest as best performer, exported model and feature artefacts, published to Hugging Face (\texttt{ucdse/bike\_availability\_model}) with Jenkins pipeline pulling model at build time; Testing: built pytest infrastructure with SQLite in-memory isolation and shared fixtures, wrote unit and integration tests for user auth, station API, prediction service, AI chat, contracts, schemas, and utilities); 
+\textbf{Report} (Machine Learning Model, Process); 
+\textbf{Management} (CI/CD, Docker, Scrum Master Sprint 3). \\
+\midrule
+Tzuyu Chang & 33.33 & 
+\textbf{Code} (\texttt{react-app}: bootstrapped React + TypeScript + Vite project, configured routing with \texttt{react-router-dom}, Tailwind CSS, ESLint, and TypeScript config; \texttt{Layout.tsx} top-level layout wrapper, \texttt{Header.tsx} site-wide navigation bar, \texttt{Footer.tsx} site-wide footer; \texttt{Home.tsx} landing page with project introduction and quick navigation; Maps page integrating Google Maps JavaScript API for interactive bike-station map with real-time station markers, availability badges, and station detail panel showing current and historical availability; Authentication pages---\texttt{Register.tsx} registration form with client-side validation, \texttt{Login.tsx} login form with JWT token storage, \texttt{VerifyEmail.tsx} prompt page after registration, \texttt{Activate.tsx} email token activation handler; Profile page displaying user info from \texttt{/api/users/me}, supporting profile update and logout; \texttt{flask-app}: designed and implemented \texttt{GET /api/stations/status} real-time station status endpoint using an efficient SQLAlchemy subquery with \texttt{func.max()} grouped by station number to retrieve only the most recent record per station, avoiding full-table scans); 
+\textbf{Report} (Overview, Requirements, Testing); 
+\textbf{Management} (User Research---designed and conducted user persona interviews, authored full interview script covering commuting habits, pain points, and feature expectations, synthesised findings into user personas; Scrum Master Sprint 1 \& 4). \\
+\midrule
+Ziling Huang & 33.33 & 
+\textbf{Code} (UI/UX Design: high-fidelity Figma mockups for Home, Maps, Chat, Profile, and authentication flows, defined visual language---colour palette, typography, component hierarchy, responsive layout grid---and produced annotated wireframes as blueprint for frontend implementation; \texttt{flask-app}: provisioned and configured Amazon RDS MySQL instance including security group rules, subnet configuration, connection parameter tuning, and environment-variable credential management, validated schema compatibility between Flask-Migrate migrations and RDS; Weather API---\texttt{GET /api/weather} fetching hourly and daily forecast from OpenWeatherMap One Call API, Pydantic \texttt{WeatherQueryDTO}/\texttt{WeatherDataVO} for strict request validation and response serialisation, error handling for invalid coordinates and API failures; Journey/Route Planning API---\texttt{POST /api/journey/plan} accepting text addresses or coordinates, Google Maps Geocoding integration, server-side optimal route calculation (nearest available source station $\rightarrow$ nearest free-dock destination station), \texttt{api\_retry} decorator for resilient Google Maps API calls; \texttt{react-app}: reusable Weather Component consuming \texttt{/api/weather} displaying current conditions, hourly and daily forecast across Maps and Home pages; Chat Page with full chat UI, message history, typing indicators, SSE streaming display, and session persistence across page reloads connected to \texttt{/api/chat} and \texttt{/api/chat/stream}; Journey Planning UI within Maps page with journey search form, rendering recommended pick-up and drop-off stations on the map, and displaying estimated route duration; Testing: wrote unit and integration tests for weather and journey APIs with mocked Google Maps API); 
+\textbf{Report} (Architecture and Design); 
+\textbf{Management} (AWS RDS, UI/UX Design, Scrum Master Sprint 2). \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\vspace{1em}
+
+\noindent\textbf{Screen Recording (6--8 min max).} URL: \textit{TODO --- paste final video URL.} 3--5 min: feature walkthrough with voice, browser URL bar clearly showing the \textbf{EC2 address}. $\sim$3 min: each member presents \textbf{1 min} on their contributions (Kaiwen $\rightarrow$ Tzuyu $\rightarrow$ Ziling).
+
+\vspace{0.5em}
+
+\noindent\textbf{GitHub Project.}\\
+Docs/report: \url{https://github.com/ucdse/docs} $\cdot$ Backend: \url{https://github.com/ucdse/flask-app} $\cdot$ Frontend: \url{https://github.com/ucdse/react-app} $\cdot$ Scraper: \url{https://github.com/ucdse/scraper}
+
+\vspace{0.5em}
+
+\noindent\textbf{Product \& Sprint Backlogs.}\\
+Product backlog: \textit{TODO --- URL.} Sprint 1: \textit{TODO.} Sprint 2: \textit{TODO.} Sprint 3: \textit{TODO.} Sprint 4: \textit{TODO.}
+
+\vspace{0.5em}
+
+\noindent\textbf{Generative AI Chats (one per student, in the \texttt{docs} repo.)}\\
+\href{https://github.com/ucdse/docs/blob/main/KaiwenYao_Generative_AI_chats.md}{KaiwenYao\_Generative\_AI\_chats.md}\\
+\href{https://github.com/ucdse/docs/blob/main/TzuyuChang_Generative_AI_chats.md}{TzuyuChang\_Generative\_AI\_chats.md}\\
+\href{https://github.com/ucdse/docs/blob/main/ZilingHuang_Generative_AI_chats.md}{ZilingHuang\_Generative\_AI\_chats.md}
+
+\end{document}
