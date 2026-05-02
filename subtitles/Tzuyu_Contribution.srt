@@ -44,11 +44,11 @@ I also developed the detailed station panels for historical and predictive data.
 
 12
 00:00:27,630 --> 00:00:33,610
-Along with the complete user authentication and profile interfaces to ensure smooth data flow.
+Along with the complete user authentication and profile interfaces. To ensure smooth data flow,
 
 13
 00:00:33,620 --> 00:00:40,800
-I wrote the front end logic to unwrap API responses and format them perfectly for our rechart.
+I wrote the frontend logic to unwrap API responses and format them perfectly for our Recharts.
 
 14
 00:00:40,810 --> 00:00:41,628
@@ -56,11 +56,11 @@ On the backend,
 
 15
 00:00:41,628 --> 00:00:46,850
-I decide the real time station status end point using an efficient sql alchemy.
+I designed the real time station status endpoint using an efficient SQLAlchemy 
 
 16
 00:00:46,860 --> 00:00:50,835
-Subquery with func.max to avoid expensive full table scans.
+subquery with func.max to avoid expensive full table scans.
 
 17
 00:00:50,835 --> 00:00:54,770
