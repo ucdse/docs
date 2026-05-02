@@ -1,0 +1,75 @@
+1
+00:00:00,050 --> 00:00:00,350
+Hi!
+
+2
+00:00:00,350 --> 00:00:01,174
+I'm Huang Ziling
+
+3
+00:00:01,174 --> 00:00:04,254
+In this project I work as a full stack developer.
+
+4
+00:00:04,254 --> 00:00:07,510
+I started by designing ui and ux in figma.
+
+5
+00:00:07,520 --> 00:00:08,420
+I've created
+
+6
+00:00:08,420 --> 00:00:13,180
+detailed frames to give our found and a clear guide. Moving to the backend.
+
+7
+00:00:13,190 --> 00:00:17,670
+I set up the RDS database to store all the apps data.
+
+8
+00:00:17,670 --> 00:00:21,830
+After that I built the flask APIs for whether.
+
+9
+00:00:21,840 --> 00:00:25,114
+And journey planning using google maps geocoding.
+
+10
+00:00:25,114 --> 00:00:26,834
+Most importantly,
+
+11
+00:00:26,834 --> 00:00:30,660
+I also build a data pipeline for our machine learning model.
+
+12
+00:00:30,980 --> 00:00:32,600
+For the front end,
+
+13
+00:00:33,070 --> 00:00:38,337
+I created interactive journey planning maps and a reusable weather widget.
+
+14
+00:00:38,337 --> 00:00:41,840
+I also created a complete chat page.
+
+15
+00:00:42,240 --> 00:00:42,940
+Finally,
+
+16
+00:00:42,940 --> 00:00:45,008
+to make sure everything works well,
+
+17
+00:00:45,008 --> 00:00:48,390
+I wrote unit test for my APIs.
+
+18
+00:00:48,400 --> 00:00:52,152
+Besides serving as a scrum master for sprint 2,
+
+19
+00:00:52,152 --> 00:00:57,791
+I also authored the architecture and design section of our final report.
