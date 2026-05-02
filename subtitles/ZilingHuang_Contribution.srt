@@ -20,7 +20,7 @@ I've created
 
 6
 00:00:08,420 --> 00:00:13,180
-detailed frames to give our found and a clear guide. Moving to the backend.
+detailed frames to give our frontend a clear guide. Moving to the backend.
 
 7
 00:00:13,190 --> 00:00:17,670
